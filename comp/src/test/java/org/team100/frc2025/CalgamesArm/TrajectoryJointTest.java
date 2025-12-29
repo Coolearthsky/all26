@@ -1,0 +1,88 @@
+package org.team100.frc2025.CalgamesArm;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.team100.lib.geometry.AccelerationSE2;
+import org.team100.lib.geometry.WaypointSE2;
+import org.team100.lib.geometry.VelocitySE2;
+import org.team100.lib.logging.LoggerFactory;
+import org.team100.lib.logging.TestLoggerFactory;
+import org.team100.lib.logging.primitive.TestPrimitiveLogger;
+import org.team100.lib.state.ControlSE2;
+import org.team100.lib.subsystems.prr.AnalyticalJacobian;
+import org.team100.lib.subsystems.prr.EAWConfig;
+import org.team100.lib.subsystems.prr.ElevatorArmWristKinematics;
+import org.team100.lib.subsystems.prr.JointAccelerations;
+import org.team100.lib.subsystems.prr.JointVelocities;
+import org.team100.lib.trajectory.Trajectory100;
+import org.team100.lib.trajectory.TrajectoryPlanner;
+import org.team100.lib.trajectory.path.PathFactory;
+import org.team100.lib.trajectory.timing.ConstantConstraint;
+import org.team100.lib.trajectory.timing.TrajectoryFactory;
+import org.team100.lib.trajectory.timing.TimingConstraint;
+import org.team100.lib.trajectory.timing.YawRateConstraint;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+/** How do the joints respond to trajectories? */
+public class TrajectoryJointTest {
+    private static final boolean DEBUG = false;
+    LoggerFactory log = new TestLoggerFactory(new TestPrimitiveLogger());
+
+    /**
+     * How does the smooth cartesian trajectory work in configuration space?
+     * 
+     * Answer: it's fine, as long as the "reach up"/"reach down" discontinuity is
+     * removed.
+     * 
+     * Acceleration is choppy in both cartesian and configuration, so maybe turn
+     * that down a bit.
+     * 
+     * Charts here:
+     * 
+     * https://docs.google.com/spreadsheets/d/1yo5gU4NwVDUP8XaGb-7jNOtN6A_7cpX3DWRTfwgKym0/edit?gid=0#gid=0
+     */
+    @Test
+    void homeToL4() {
+        List<TimingConstraint> c = List.of(
+                new ConstantConstraint(log, 1, 1),
+                new YawRateConstraint(log, 1, 1));
+        TrajectoryFactory trajectoryFactory = new TrajectoryFactory(c);
+        PathFactory pathFactory = new PathFactory();
+        TrajectoryPlanner m_planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
+
+        Trajectory100 t = m_planner.restToRest(List.of(
+                WaypointSE2.irrotational(
+                        new Pose2d(1, 0, new Rotation2d(0)), 0, 1.2),
+                WaypointSE2.irrotational(
+                        new Pose2d(1.9, 0.5, new Rotation2d(2.5)), 2, 1.2)));
+
+        ElevatorArmWristKinematics k = new ElevatorArmWristKinematics(
+                0.5, 0.3);
+        AnalyticalJacobian J = new AnalyticalJacobian(k);
+        if (DEBUG)
+            System.out
+                    .println(
+                            "t, x, y, r, vx, vy, vr, ax, ay, ar, q1, q2, q3, q1dot, q2dot, q3dot, q1ddot, q2ddot, q3ddot");
+        for (double tt = 0; tt < t.duration(); tt += 0.02) {
+            ControlSE2 m = ControlSE2.fromTimedState(t.sample(tt));
+            Pose2d p = m.pose();
+            VelocitySE2 v = m.velocity();
+            AccelerationSE2 a = m.acceleration();
+            EAWConfig q = k.inverse(p);
+            JointVelocities jv = J.inverse(m.model());
+            JointAccelerations ja = J.inverseA(m);
+            if (DEBUG) {
+                System.out.printf(
+                        "%6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %6.3f\n",
+                        tt, p.getX(), p.getY(), p.getRotation().getRadians(), v.x(), v.y(), v.theta(), a.x(),
+                        a.y(), a.theta(), q.shoulderHeight(), q.shoulderAngle(), q.wristAngle(), jv.elevator(),
+                        jv.shoulder(), jv.wrist(),
+                        ja.elevator(), ja.shoulder(), ja.wrist());
+            }
+        }
+    }
+
+}

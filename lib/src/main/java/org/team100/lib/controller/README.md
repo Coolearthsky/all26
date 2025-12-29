@@ -1,0 +1,10 @@
+# lib.controller
+
+This  package contains code that controls mechanisms, i.e. attempts
+to drive a mechanism to a target position and/or velocity, by measuring the
+actual mechanism state and applying some control law.
+
+There are two packages here:
+
+* `r1` for single-dimension control
+* `se2` describes planar mechanisms and drivetrain motion in the SE(2) manifold.
