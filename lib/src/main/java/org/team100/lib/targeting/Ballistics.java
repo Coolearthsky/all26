@@ -9,24 +9,17 @@ public class Ballistics {
     private static final double G = 9.81;
 
     /**
-     * @param range in meters
-     * @param tof   time of flight, seconds
-     */
-    public record Solution(double range, double tof) {
-    }
-
-    /**
      * The parabolic path is certainly wrong; this is only for testing.
      * 
      * @param speed     muzzle speed, meters/sec
      * @param elevation shooter elevation above horizontal, radians
      * @return landing solution
      */
-    public static Solution parabolic(double speed, double elevation) {
+    public static FiringSolution parabolic(double speed, double elevation) {
         // https://en.wikipedia.org/wiki/Projectile_motion#Time_of_flight_or_total_time_of_the_whole_journey
         double tof = 2 * speed * Math.sin(elevation) / G;
         double range = speed * tof * Math.cos(elevation);
-        return new Solution(range, tof);
+        return new FiringSolution(range, tof);
     }
 
     /**
@@ -50,9 +43,9 @@ public class Ballistics {
      * @param elevation shooter elevation above horizontal, radians
      * @return landing solution
      */
-    public static Solution newton(double speed, double elevation) {
+    public static FiringSolution newton(double speed, double elevation) {
         // this should use a precomputed lookup table.
-        return new Solution(0, 0);
+        return new FiringSolution(0, 0);
     }
 
 }

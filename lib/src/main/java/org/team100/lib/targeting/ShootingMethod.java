@@ -19,6 +19,8 @@ import edu.wpi.first.math.numbers.N2;
  * velocity and spin.
  */
 public class ShootingMethod {
+    private static final boolean DEBUG = false;
+
     public record Solution(Rotation2d azimuth, Rotation2d elevation) {
     }
 
@@ -41,7 +43,7 @@ public class ShootingMethod {
         GlobalVelocityR2 vT = targetVelocity.minus(robotVelocity);
 
         // domain is (az,el), range is error
-        Vector<N2> xMin = VecBuilder.fill(-Math.PI, 0);
+        Vector<N2> xMin = VecBuilder.fill(-Math.PI, 0.01);
         Vector<N2> xMax = VecBuilder.fill(Math.PI, Math.PI / 2);
         int iterations = 10;
         double dxLimit = 0.1;
@@ -55,7 +57,10 @@ public class ShootingMethod {
                 iterations,
                 dxLimit);
         try {
-            Vector<N2> x = solver.solve2(VecBuilder.fill(0, 0), 3, true);
+            // choosing this poorly breaks the solver
+            // TODO: expose this externally, make it less important.
+            double initialElevation = 0.75;
+            Vector<N2> x = solver.solve2(VecBuilder.fill(0, initialElevation), 3, true);
             return Optional.of(
                     new Solution(
                             new Rotation2d(x.get(0)),
@@ -74,13 +79,19 @@ public class ShootingMethod {
         // Extract contents of the state variable
         Rotation2d azimuth = new Rotation2d(x.get(0));
         double elevation = x.get(1);
+        if (DEBUG)
+            System.out.printf("elevation %f\n", elevation);
         // Lookup for this state.
-        Range.Solution rangeSolution = m_range.get(elevation);
+        FiringSolution rangeSolution = m_range.get(elevation);
+        if (DEBUG)
+            System.out.printf("solution %s\n", rangeSolution);
         // Ball location at impact, relative to initial robot position
         Translation2d b = new Translation2d(rangeSolution.range(), azimuth);
         // target location at impact, relative to initial robot position
         Translation2d T = vT.integrate(T0, rangeSolution.tof());
         Translation2d err = b.minus(T);
+        if (DEBUG)
+            System.out.printf("err %s\n", err);
         // result error is (x, y)
         return GeometryUtil.toVec(err);
     }

@@ -102,7 +102,10 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
      *                       clients can't tolerate a "kinda close" solution.
      */
     public Vector<X> solve2(Vector<X> initialX, int restarts, boolean throwOnFailure) {
-        // System.out.printf("initialX: %s\n", StrUtil.vecStr(initialX));
+        // make sure our guess is within the limits.
+        limit(initialX);
+        if (DEBUG)
+            System.out.printf("initialX: %s\n", StrUtil.vecStr(initialX));
         long startTime = System.nanoTime();
         int iter = 0;
         Vector<Y> error = new Vector<>(m_ydim);
@@ -118,10 +121,10 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
                 // System.out.printf("error: %s\n", StrUtil.vecStr(error));
 
                 if (within(error)) {
-                    // System.out.println("success");
+                    if (DEBUG)
+                        System.out.printf("success iter=%d\n", iter);
                     return x;
                 }
-                Matrix<Y, X> j = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
 
                 // if (DEBUG)
                 // System.out.printf("J %s\n", StrUtil.matStr(j));
@@ -136,19 +139,7 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
 
                 // this method is faster.
                 // solve A x = B i.e. J dx = error
-                Vector<X> dx = new Vector<>(j.solve(error));
-
-                // this solver also works but it's not better.
-                // Vector<X> dx = getDxWithQRDecomp(error, j);
-
-                // if (DEBUG)
-                // System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
-
-                // Too-high dx results in oscillation.
-                clamp(dx);
-                update(x, dx);
-                // Keep the x estimate within bounds.
-                limit(x);
+                solveOnce(error, x);
             }
             if (restarts > 0) {
                 // if (DEBUG)
@@ -181,6 +172,30 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
                         ((double) finishTime - startTime) / 1000000);
             }
         }
+    }
+
+    private void solveOnce(Vector<Y> error, Vector<X> x) {
+        Matrix<Y, X> j = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
+
+        if (j.det() < 1e-6) {
+            // don't try to update
+            System.out.printf("x %s\n", x);
+            System.out.printf("j %s\n", j);
+            return;
+        }
+        Vector<X> dx = new Vector<>(j.solve(error));
+
+        // this solver also works but it's not better.
+        // Vector<X> dx = getDxWithQRDecomp(error, j);
+
+        // if (DEBUG)
+        // System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
+
+        // Too-high dx results in oscillation.
+        clamp(dx);
+        update(x, dx);
+        // Keep the x estimate within bounds.
+        limit(x);
     }
 
     /** A different solver */
