@@ -3,6 +3,8 @@ package org.team100.lib.optimization;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 
+import org.team100.lib.util.StrUtil;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
@@ -14,6 +16,7 @@ import edu.wpi.first.math.Vector;
  * Estimates the Jacobian using symmetric differences around the reference x.
  */
 public class NumericalJacobian100 {
+    private static final boolean DEBUG = false;
     private static final double DX = 1e-5;
 
     /**
@@ -49,14 +52,28 @@ public class NumericalJacobian100 {
      * 
      * Mutates x to save allocation cost, but puts it back the way it was upon
      * returning.
+     * 
+     * @param <X>  x dimensions
+     * @param <Y>  y dimensions
+     * @param xdim x dimensions
+     * @param ydim y dimensions
+     * @param f    function, y=f(x)
+     * @param x    x value to evaluate
+     * @returns jacobian, e.g.
+     *          [dy1/dx1 dy1/dx2]
+     *          [dy2/dx1 dy2/dx2]
      */
     public static <Y extends Num, X extends Num> Matrix<Y, X> numericalJacobian2(
             Nat<X> xdim,
             Nat<Y> ydim,
             Function<Vector<X>, Vector<Y>> f,
             Vector<X> x) {
+        if (DEBUG)
+            System.out.println("NumericalJacobian100.NumericalJacobian2()");
         final Vector<Y> Y = f.apply(x);
-        // System.out.printf("*** x %s Y %s\n", StrUtil.vecStr(x), StrUtil.vecStr(Y));
+        if (DEBUG) {
+            System.out.printf("center point: x %s Y %s\n", StrUtil.vecStr(x), StrUtil.vecStr(Y));
+        }
         Matrix<Y, X> result = new Matrix<>(ydim, xdim);
         for (int colI = 0; colI < xdim.getNum(); colI++) {
             final double xi = x.get(colI);

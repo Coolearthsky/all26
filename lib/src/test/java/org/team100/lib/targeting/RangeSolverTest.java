@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 public class RangeSolverTest {
     private static final double DELTA = 0.001;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     /**
      * How should we choose a value for DT? We should choose a value such that the
@@ -27,6 +27,8 @@ public class RangeSolverTest {
      * trajectory), a reasonable dt would be something like 0.1 sec.
      * 
      * Note 0.1 sec is really coarse. RK4 integration works!
+     * 
+     * But this definitely does not work for shorter trajectories.
      */
     @Test
     void testDt() {
@@ -35,7 +37,8 @@ public class RangeSolverTest {
         double dtmax = 0.25;
         for (double dt = ddt; dt < dtmax; dt += ddt) {
             FiringSolution s = RangeSolver.solveWithDt(d, 10, 1, 1, dt);
-            System.out.printf("%20.10f %20.10f\n", dt, s.range());
+            if (DEBUG)
+                System.out.printf("%20.10f %20.10f\n", dt, s.range());
         }
     }
 
@@ -221,7 +224,8 @@ public class RangeSolverTest {
     void testFull() {
         double g = 9.81;
         Drag d = new Drag(0, 0, 0, 1, 0);
-        System.out.println("dt, v, elevation, R, range, t, tof");
+        if (DEBUG)
+            System.out.println("dt, v, elevation, R, range, t, tof");
         for (double dt = 0.005; dt < 0.15; dt += 0.005) {
             for (double v = 1; v < 20; v += 1) {
                 for (double elevation = 0.1; elevation < 1.5; elevation += 0.1) {
@@ -235,13 +239,14 @@ public class RangeSolverTest {
                     if (rangeAbsoluteError > 0.01) // 1 cm tolerance
                         continue;
                     // if (rangeRelativeError > 0.01) // 1%
-                    //     continue;
+                    // continue;
                     if (tofAbsoluteError > 0.02) // roborio clock
                         continue;
                     // if (tofRelativeError > 0.01) // 1%
-                    //     continue;
-                    System.out.printf("%6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %10.7f, %10.7f\n",
-                            dt, v, elevation, R, s.range(), t, s.tof());
+                    // continue;
+                    if (DEBUG)
+                        System.out.printf("%6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %10.7f, %10.7f\n",
+                                dt, v, elevation, R, s.range(), t, s.tof());
 
                 }
             }
@@ -260,8 +265,9 @@ public class RangeSolverTest {
         FiringSolution s = RangeSolver.solveWithDt(d, v, 0, elevation, dt);
         double rangeRelativeError = Math.abs(R - s.range()) / R;
         double tofRelativeError = Math.abs(t - s.tof()) / t;
-        System.out.printf("%6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %10.7f, %10.7f\n",
-                dt, v, elevation, R, s.range(), t, s.tof());
+        if (DEBUG)
+            System.out.printf("%6.3f, %6.3f, %6.3f, %6.3f, %6.3f, %10.7f, %10.7f\n",
+                    dt, v, elevation, R, s.range(), t, s.tof());
     }
 
 }

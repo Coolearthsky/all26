@@ -1,9 +1,11 @@
 package org.team100.lib.optimization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.function.Function;
 
+import org.ejml.data.SingularMatrixException;
 import org.junit.jupiter.api.Test;
 import org.team100.lib.geometry.GeometryUtil;
 import org.team100.lib.kinematics.urdf.URDFAL5D;
@@ -417,6 +419,13 @@ public class NewtonsMethodTest {
     }
 
     @Test
+    void testFailedSolve() {
+        Vector<N2> b = VecBuilder.fill(0, 0);
+        Matrix<N2, N2> A = new Matrix<>(Nat.N2(), Nat.N2());
+        assertThrows(SingularMatrixException.class, () -> A.solve(b));
+    }
+
+    @Test
     void test4Pose2Solver2() {
         // case above but using the solver
         Pose2d XXd = new Pose2d(0, 1, new Rotation2d(2.618));
@@ -685,7 +694,8 @@ public class NewtonsMethodTest {
                 1.4888289270e-04);
         Vector<N5> q0 = c.toVec();
         long startTime = System.nanoTime();
-        solver.solve2(q0, restarts, true);
+        assertThrows(IllegalArgumentException.class,
+                () -> solver.solve2(q0, restarts, true));
         if (DEBUG) {
             long finishTime = System.nanoTime();
             System.out.printf("ET (ms): %6.3f\n",

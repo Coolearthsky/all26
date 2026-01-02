@@ -4,7 +4,9 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Twist3d;
 
@@ -26,14 +28,24 @@ public class StrUtil {
                 t.dx, t.dy, t.dz, t.rx, t.ry, t.rz);
     }
 
+    public static String rotStr(Rotation2d r) {
+        return String.format("%9.5f",
+                r.getRadians());
+    }
+
     public static String rotStr(Rotation3d r) {
         return String.format("%.8e, %.8e, %.8e",
                 r.getX(), r.getY(), r.getZ());
     }
 
-    public static String transStr(Translation3d r) {
+     public static String transStr(Translation2d t) {
+        return String.format("%12.8f, %12.8f",
+                t.getX(), t.getY());
+    }
+
+    public static String transStr(Translation3d t) {
         return String.format("%.8e, %.8e, %.8e",
-                r.getX(), r.getY(), r.getZ());
+                t.getX(), t.getY(), t.getZ());
     }
 
     public static String vecStr(Vector<?> m) {
@@ -48,15 +60,20 @@ public class StrUtil {
 
     public static String matStr(Matrix<?, ?> m) {
         StringBuilder b = new StringBuilder();
-        b.append("[");
         for (int i = 0; i < m.getNumRows(); ++i) {
+            if (i == 0)
+                b.append("[");
+            else
+                b.append(" ");
             for (int j = 0; j < m.getNumCols(); ++j) {
-                b.append(String.format(" %.3e", m.get(i, j)));
+                b.append(String.format(" %8.4f", m.get(i, j)));
             }
-            b.append(";\n");
+            if (i < m.getNumRows() - 1)
+                b.append(";\n");
+            else
+                b.append("]");
         }
 
-        b.append("]");
         return b.toString();
     }
 

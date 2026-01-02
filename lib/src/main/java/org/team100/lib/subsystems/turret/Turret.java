@@ -86,7 +86,7 @@ public class Turret extends SubsystemBase {
         m_speed = speed;
         m_intercept = new Intercept(log);
         Drag d = new Drag(0.5, 0.025, 0.1, 0.1, 0.1);
-        Range range = new Range(d, speed, 0);
+        Range range = new Range(d, speed, 0, true);
         m_shootingMethod = new ShootingMethod(range, 0.01);
         m_aiming = false;
     }
@@ -184,8 +184,14 @@ public class Turret extends SubsystemBase {
         GlobalVelocityR2 robotVelocity = state.velocityR2();
         Translation2d targetPosition = m_target.get();
         GlobalVelocityR2 targetVelocity = GlobalVelocityR2.ZERO;
+        // choose direct fire
+        double initialElevation = 0.1;
         Optional<ShootingMethod.Solution> s = m_shootingMethod.solve(
-                robotPosition, robotVelocity, targetPosition, targetVelocity);
+                robotPosition,
+                robotVelocity,
+                targetPosition,
+                targetVelocity,
+                initialElevation);
         return s.map(x -> new Solution(x.azimuth(), x.elevation()));
     }
 

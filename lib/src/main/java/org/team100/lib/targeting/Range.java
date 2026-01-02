@@ -11,7 +11,6 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
  */
 public class Range {
     private static final boolean DEBUG = false;
-    private static final boolean CACHE = false;
 
     /** Try elevations this far apart. */
     private static final double ELEVATION_STEP = 0.01;
@@ -19,6 +18,7 @@ public class Range {
     private final Drag d;
     private final double v;
     private final double omega;
+    private final boolean useCache;
 
     /** key = elevation in radians, value = solution */
     private final InterpolatingTreeMap<Double, FiringSolution> m_map;
@@ -28,10 +28,11 @@ public class Range {
      * @param v     muzzle speed in m/s
      * @param omega spin in rad/s, positive is backspin
      */
-    public Range(Drag d, double v, double omega) {
+    public Range(Drag d, double v, double omega, boolean useCache) {
         this.d = d;
         this.v = v;
         this.omega = omega;
+        this.useCache = useCache;
         m_map = new InterpolatingTreeMap<>(
                 InverseInterpolator.forDouble(), new FiringSolutionInterpolator());
         if (DEBUG)
@@ -53,9 +54,9 @@ public class Range {
      * @param elevation in radians
      */
     public FiringSolution get(double elevation) {
-        if (!CACHE)
-            return RangeSolver.getSolution(d, v, omega, elevation);
-        return m_map.get(elevation);
+        if (useCache)
+            return m_map.get(elevation);
+        return RangeSolver.getSolution(d, v, omega, elevation);
     }
 
 }

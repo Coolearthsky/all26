@@ -3,6 +3,7 @@ package org.team100.lib.optimization;
 import java.util.Random;
 import java.util.function.Function;
 
+import org.ejml.data.SingularMatrixException;
 import org.team100.lib.util.StrUtil;
 
 import edu.wpi.first.math.MathUtil;
@@ -24,7 +25,7 @@ import edu.wpi.first.math.jni.EigenJNI;
  * https://hades.mech.northwestern.edu/images/7/7f/MR.pdf
  */
 public class NewtonsMethod<X extends Num, Y extends Num> {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private final Nat<X> m_xdim;
     private final Nat<Y> m_ydim;
     private final Function<Vector<X>, Vector<Y>> m_f;
@@ -105,7 +106,7 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
         // make sure our guess is within the limits.
         limit(initialX);
         if (DEBUG)
-            System.out.printf("initialX: %s\n", StrUtil.vecStr(initialX));
+            System.out.printf("NewtonsMethod.solve2()\ninitialX: %s\n", StrUtil.vecStr(initialX));
         long startTime = System.nanoTime();
         int iter = 0;
         Vector<Y> error = new Vector<>(m_ydim);
@@ -139,7 +140,9 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
 
                 // this method is faster.
                 // solve A x = B i.e. J dx = error
-                solveOnce(error, x);
+
+                if (!solveOnce(error, x))
+                    break;
             }
             if (restarts > 0) {
                 // if (DEBUG)
@@ -166,8 +169,8 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
                 limit(x);
                 return solve2(x, restarts - 1, throwOnFailure);
             }
-            // if (DEBUG)
-            System.out.printf("random restart failed, error %f\n", error.maxAbs());
+            if (DEBUG)
+                System.out.printf("random restart failed, error %f\n", error.maxAbs());
             if (throwOnFailure)
                 throw new IllegalArgumentException(
                         String.format("failed to converge for inputs %s",
@@ -182,28 +185,35 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
         }
     }
 
-    private void solveOnce(Vector<Y> error, Vector<X> x) {
-        Matrix<Y, X> j = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
-
-        if (j.det() < 1e-6) {
-            // don't try to update
-            System.out.printf("x %s\n", x);
-            System.out.printf("j %s\n", j);
-            return;
+    /**
+     * @return false if unsolvable
+     */
+    private boolean solveOnce(Vector<Y> error, Vector<X> x) {
+        Matrix<Y, X> J = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
+        if (DEBUG) {
+            System.out.printf("x %s\n", StrUtil.vecStr(x));
+            System.out.printf("J %s\n", StrUtil.matStr(J));
         }
-        Vector<X> dx = new Vector<>(j.solve(error));
+        try {
+            // solve J dx = error
+            Vector<X> dx = new Vector<>(J.solve(error));
 
-        // this solver also works but it's not better.
-        // Vector<X> dx = getDxWithQRDecomp(error, j);
+            // this solver also works but it's not better.
+            // Vector<X> dx = getDxWithQRDecomp(error, j);
 
-        if (DEBUG)
-            System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
+            if (DEBUG)
+                System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
 
-        // Too-high dx results in oscillation.
-        clamp(dx);
-        update(x, dx);
-        // Keep the x estimate within bounds.
-        limit(x);
+            // Too-high dx results in oscillation.
+            clamp(dx);
+            update(x, dx);
+            // Keep the x estimate within bounds.
+            limit(x);
+            return true;
+        } catch (SingularMatrixException ex) {
+            // solver cannot succeed
+            return false;
+        }
     }
 
     /** A different solver */
@@ -223,10 +233,10 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
     }
 
     /**
-     * Uses the uniform norm (maxabs), not the (perhaps expected) L2 norm.
+     * Radial distance is within tolerance.
      */
     private boolean within(Vector<Y> error) {
-        return error.maxAbs() < m_tolerance;
+        return error.norm() < m_tolerance;
     }
 
     /**
@@ -236,11 +246,17 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
      * The "x" space is Euclidean, so using a simple sum is ok.
      */
     private void update(Vector<X> x, Vector<X> dx) {
-        if (DEBUG)
-            System.out.printf("update x %s dx %s\n", x, dx);
+        if (DEBUG) {
+            System.out.println("## NewtonsMethod.update()");
+            System.out.printf("x %s \n", StrUtil.vecStr(x));
+            System.out.printf("dx %s\n", StrUtil.vecStr(dx));
+        }
         for (int i = 0; i < x.getNumRows(); ++i) {
             double newXi = x.get(i) - dx.get(i);
             x.set(i, 0, newXi);
+        }
+        if (DEBUG) {
+            System.out.printf("new x %s \n", StrUtil.vecStr(x));
         }
     }
 
