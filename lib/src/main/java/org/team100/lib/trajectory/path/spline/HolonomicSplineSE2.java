@@ -2,28 +2,23 @@ package org.team100.lib.trajectory.path.spline;
 
 import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.Metrics;
-import org.team100.lib.geometry.PathPoint;
+import org.team100.lib.geometry.PathPointSE2;
 import org.team100.lib.geometry.WaypointSE2;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.numbers.N2;
 
 /**
- * Holonomic spline.
+ * Holonomic spline in the SE(2) manifold.
  * 
- * Internally this is three one-dimensional splines (x, y, heading), with
- * respect to a parameter [0,1].
- * 
- * If you don't care about rotation, just pass zero.
- * 
- * Note that some nonholonomic spline consumers assume that dx carries all the
- * motion; that's not true here.
- * 
- * This happily produces "splines" with sharp corners, if the segment
- * derivatives don't match.
+ * The three dimensions (x, y, heading) of the Pose2d, p, are independent
+ * one-dimensional splines, with respect to a parameter s∈[0,1].
  */
-public class HolonomicSpline {
+public class HolonomicSplineSE2 {
     private static final boolean DEBUG = false;
 
     private final SplineR1 m_x;
@@ -58,7 +53,7 @@ public class HolonomicSpline {
      * @param p0 starting pose
      * @param p1 ending pose
      */
-    public HolonomicSpline(WaypointSE2 p0, WaypointSE2 p1) {
+    public HolonomicSplineSE2(WaypointSE2 p0, WaypointSE2 p1) {
         // Translation distance in the xy plane.
         double distance = Metrics.translationalDistance(p0.pose(), p1.pose());
         if (distance < 1e-6)
@@ -103,138 +98,122 @@ public class HolonomicSpline {
         m_heading = SplineR1.get(0.0, delta, dtheta0, dtheta1, ddtheta0, ddtheta1);
     }
 
-    @Override
-    public String toString() {
-        return "HolonomicSpline [m_x=" + m_x
-                + ", m_y=" + m_y
-                + ", m_theta=" + m_heading
-                + ", m_r0=" + m_heading0 + "]";
-    }
-
     /**
      * TODO: remove the "1" scale here
      * 
      * @param s [0,1]
      */
-    public PathPoint getPathPoint(double s) {
-        return new PathPoint(
-                new WaypointSE2(
-                        new Pose2d(new Translation2d(x(s), y(s)), getHeading(s)),
-                        getCourse(s), 1),
+    public PathPointSE2 sample(double s) {
+        Pose2d pose = new Pose2d(new Translation2d(x(s), y(s)), heading(s));
+        DirectionSE2 course = course(s);
+        WaypointSE2 waypoint = new WaypointSE2(pose, course, 1);
+        return new PathPointSE2(
+                waypoint,
                 this, s,
-                getDHeadingDs(s),
-                getCurvature(s));
+                headingRate(s),
+                curvature(s));
     }
 
-    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////
+    ///
+    /// position, p
 
-    /**
-     * Direction of motion in SE(2). Includes both cartesian dimensions and also the
-     * rotation dimension. This is exactly a unit-length twist in the motion
-     * direction.
-     */
-    private DirectionSE2 getCourse(double s) {
-        double dx = dx(s);
-        double dy = dy(s);
-        double dtheta = dtheta(s);
-        if (DEBUG)
-            System.out.printf("%f %f %f\n", dx, dy, dtheta);
-        return new DirectionSE2(dx, dy, dtheta);
-    }
-
-    private double getDHeading(double s) {
-        return m_heading.getVelocity(s);
-    }
-
-    /**
-     * Change in heading per distance traveled, i.e. spatial change in heading.
-     * dtheta/ds (radians/meter).
-     * 
-     * TODO: elsewhere this is combined with R2 pathwise velocity, so this is wrong.
-     */
-    double getDHeadingDs(double s) {
-        return getDHeading(s) / getVelocity(s);
-    }
-
-    /** x at s */
-    double x(double s) {
+    private double x(double s) {
         return m_x.getPosition(s);
     }
 
-    /** y at s */
-    double y(double s) {
+    private double y(double s) {
         return m_y.getPosition(s);
     }
 
-    /** heading at s */
-    private Rotation2d getHeading(double s) {
-        double headingFromZero = m_heading.getPosition(s);
-        return m_heading0.rotateBy(Rotation2d.fromRadians(headingFromZero));
+    private Rotation2d heading(double s) {
+        return m_heading0.rotateBy(Rotation2d.fromRadians(m_heading.getPosition(s)));
     }
 
-    /** dx/ds */
+    ////////////////////////////////////////////////////////////
+    ///
+    /// first derivative, dp/ds or pprime
+
     double dx(double s) {
         return m_x.getVelocity(s);
     }
 
-    /** dy/ds */
-    double dy(double s) {
+    private double dy(double s) {
         return m_y.getVelocity(s);
     }
 
-    /** dheading/ds */
-    double dtheta(double s) {
+    private double dheading(double s) {
         return m_heading.getVelocity(s);
     }
 
-    /** d^2x/ds^2 */
+    private DirectionSE2 course(double s) {
+        double dx = dx(s);
+        double dy = dy(s);
+        double dheading = dheading(s);
+        if (DEBUG)
+            System.out.printf("%f %f %f\n", dx, dy, dheading);
+        return new DirectionSE2(dx, dy, dheading);
+    }
+
+    /** Magnitude of translational part of dp/ds */
+    private double pprimeTranslationNorm(double s) {
+        double dx = dx(s);
+        double dy = dy(s);
+        return Math.hypot(dx, dy);
+    }
+
+    /** Heading angular velocity with respect to s. */
+    private double headingRate(double s) {
+        double dheading = dheading(s);
+        double v = pprimeTranslationNorm(s);
+        return dheading / v;
+    }
+
+    ////////////////////////////////////////////////////////////
+    ///
+    /// second derivative, d^2q/ds^2 or pprimeprime
+
     double ddx(double s) {
         return m_x.getAcceleration(s);
     }
 
-    /** d^2y/ds^2 */
-    double ddy(double s) {
+    private double ddy(double s) {
         return m_y.getAcceleration(s);
     }
 
-    /** d^2heading/ds^2 */
-    double ddtheta(double s) {
-        return m_heading.getAcceleration(s);
-    }
-
     /**
-     * Velocity is the change in position per parameter, p: dx/ds (meters per s).
-     * Since s is not time, it is not "velocity" in the usual sense.
+     * Scalar curvature, $\kappa$, is the norm of the curvature vector.
+     * 
+     * see MATH.md.
      */
-    private double getVelocity(double s) {
-        //
-        //
-        double dx = dx(s);
-        double dy = dy(s);
-        double dtheta = dtheta(s);
-        // return Math.hypot(dx, dy);
-        //
-        //
-        // now yields SE(2) L2 norm, not just cartesian.
-        return Math.sqrt(dx * dx + dy * dy + dtheta * dtheta);
+    private double curvature(double s) {
+        return K(s).norm();
     }
 
     /**
-     * Curvature is the change in motion direction per distance traveled.
+     * Curvature vector is the change in motion direction per distance traveled.
      * rad/m.
-     * Note the denominator is distance in this case, not the parameter, p.
-     * but the argument to this function *is* the parameter, s. :-)
+     * 
+     * see MATH.md
      */
-    double getCurvature(double s) {
-        double dx = dx(s);
-        double dy = dy(s);
-        double ddx = ddx(s);
-        double ddy = ddy(s);
-        double d = dx * dx + dy * dy;
-        if (d <= 0) {
-            // this isn't really zero
-            return 0;
-        }
-        return (dx * ddy - ddx * dy) / Math.pow(d, 1.5);
+    private Vector<N2> K(double s) {
+        // this derivation works for any dimensions.
+        Vector<N2> rprime = VecBuilder.fill(dx(s), dy(s));
+        Vector<N2> rprimeprime = VecBuilder.fill(ddx(s), ddy(s));
+        double rprimenorm = rprime.norm();
+        Vector<N2> T = rprime.div(rprimenorm);
+        Vector<N2> p2 = rprimeprime.div(rprimenorm * rprimenorm);
+        Vector<N2> K = p2.minus(T.times(T.dot(p2)));
+        return K;
+    }
+
+    ////////////////////////////////////////////////////////////
+
+    @Override
+    public String toString() {
+        return "HolonomicSplineSE2 [m_x=" + m_x
+                + ", m_y=" + m_y
+                + ", m_theta=" + m_heading
+                + ", m_r0=" + m_heading0 + "]";
     }
 }

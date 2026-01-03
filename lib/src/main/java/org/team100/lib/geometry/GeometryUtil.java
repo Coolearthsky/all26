@@ -102,8 +102,12 @@ public class GeometryUtil {
                 speeds.omegaRadiansPerSecond * dt);
     }
 
-    public static Twist2d scale(Twist2d twist, double scale) {
-        return new Twist2d(twist.dx * scale, twist.dy * scale, twist.dtheta * scale);
+    public static Twist2d scale(Twist2d t, double s) {
+        return new Twist2d(t.dx * s, t.dy * s, t.dtheta * s);
+    }
+
+    public static Twist3d scale(Twist3d t, double s) {
+        return new Twist3d(t.dx * s, t.dy * s, t.dz * s, t.rx * s, t.ry * s, t.rz * s);
     }
 
     public static VelocitySE2 scale(VelocitySE2 v, double scale) {
@@ -364,6 +368,10 @@ public class GeometryUtil {
     /** 3-vector for translation */
     public static Vector<N3> toVec3(Translation2d t) {
         return VecBuilder.fill(t.getX(), t.getY(), 0);
+    }
+
+    public static double cross(Vector<N2> a, Vector<N2> b) {
+        return a.get(0) * b.get(1) - a.get(1) * b.get(0);
     }
 
     /////////////////////////////////////////////////////////////////

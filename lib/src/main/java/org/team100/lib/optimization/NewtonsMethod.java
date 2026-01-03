@@ -3,6 +3,7 @@ package org.team100.lib.optimization;
 import java.util.Random;
 import java.util.function.Function;
 
+import org.ejml.data.SingularMatrixException;
 import org.team100.lib.util.StrUtil;
 
 import edu.wpi.first.math.MathUtil;
@@ -102,7 +103,10 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
      *                       clients can't tolerate a "kinda close" solution.
      */
     public Vector<X> solve2(Vector<X> initialX, int restarts, boolean throwOnFailure) {
-        // System.out.printf("initialX: %s\n", StrUtil.vecStr(initialX));
+        // make sure our guess is within the limits.
+        limit(initialX);
+        if (DEBUG)
+            System.out.printf("NewtonsMethod.solve2()\ninitialX: %s\n", StrUtil.vecStr(initialX));
         long startTime = System.nanoTime();
         int iter = 0;
         Vector<Y> error = new Vector<>(m_ydim);
@@ -114,41 +118,20 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
                     System.out.printf("iter: %d x: %s\n", iter, StrUtil.vecStr(x));
 
                 error = m_f.apply(x);
-                // if (DEBUG)
-                // System.out.printf("error: %s\n", StrUtil.vecStr(error));
+                if (DEBUG)
+                    System.out.printf("error: %s\n", StrUtil.vecStr(error));
 
                 if (within(error)) {
-                    // System.out.println("success");
+                    if (DEBUG)
+                        System.out.printf("success iter=%d\n", iter);
                     return x;
                 }
-                Matrix<Y, X> j = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
 
-                // if (DEBUG)
-                // System.out.printf("J %s\n", StrUtil.matStr(j));
-
-                // the pseudoinverse should always work too
-                // note this is quite slow
-                // Matrix<X, Y> jInv = new Matrix<>(j.getStorage().pseudoInverse());
-                // if (DEBUG)
-                // System.out.printf("Jinv %s\n", StrUtil.matStr(jInv));
-
-                // Vector<X> dx = new Vector<>(jInv.times(error));
-
-                // this method is faster.
-                // solve A x = B i.e. J dx = error
-                Vector<X> dx = new Vector<>(j.solve(error));
-
-                // this solver also works but it's not better.
-                // Vector<X> dx = getDxWithQRDecomp(error, j);
-
-                // if (DEBUG)
-                // System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
-
-                // Too-high dx results in oscillation.
-                clamp(dx);
-                update(x, dx);
-                // Keep the x estimate within bounds.
-                limit(x);
+                if (!solveOnce(error, x)) {
+                    if (DEBUG)
+                        System.out.println("solve failed");
+                    break;
+                }
             }
             if (restarts > 0) {
                 // if (DEBUG)
@@ -161,14 +144,22 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
                 // System.out.printf("rv %s\n", StrUtil.vecStr(rv));
                 // rv = rv.plus(x);
                 // limit(rv);
+                // this picks a point *near* the failed point
+                // which is probably not what we want, since we'll
+                // just fall into the same local minimum
                 for (int i = 0; i < m_xdim.getNum(); i++) {
                     x.set(i, 0, x.get(i) + 0.1 * (random.nextDouble() - 0.5));
+                }
+                // instead, pick a random point within the bounds.
+                for (int i = 0; i < m_xdim.getNum(); i++) {
+                    double range = m_xMax.get(i) - m_xMin.get(i);
+                    x.set(i, 0, m_xMin.get(i) + range * random.nextDouble());
                 }
                 limit(x);
                 return solve2(x, restarts - 1, throwOnFailure);
             }
-            // if (DEBUG)
-            System.out.printf("random restart failed, error %f\n", error.maxAbs());
+            if (DEBUG)
+                System.out.printf("random restart failed, error %f\n", error.maxAbs());
             if (throwOnFailure)
                 throw new IllegalArgumentException(
                         String.format("failed to converge for inputs %s",
@@ -183,27 +174,63 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
         }
     }
 
-    /** A different solver */
-    Vector<X> getDxWithQRDecomp(Vector<Y> error, Matrix<Y, X> j) {
-        double[] A = j.getData();
-        int Arows = j.getNumRows();
-        int Acols = j.getNumCols();
-        double[] B = error.getData();
-        int Brows = error.getNumRows();
-        int Bcols = error.getNumCols();
-        // dst has same dimensions as B
-        double[] dst = new double[B.length];
-        // solve Ax=B
-        EigenJNI.solveFullPivHouseholderQr(A, Arows, Acols, B, Brows, Bcols, dst);
-        Vector<X> dx = new Vector<>(new Matrix<>(m_xdim, Nat.N1(), dst));
-        return dx;
+    /**
+     * @return false if unsolvable
+     */
+    private boolean solveOnce(Vector<Y> error, Vector<X> x) {
+        Matrix<Y, X> J = NumericalJacobian100.numericalJacobian2(m_xdim, m_ydim, m_f, x);
+        if (DEBUG) {
+            System.out.printf("x %s\n", StrUtil.vecStr(x));
+            System.out.printf("J %s\n", StrUtil.matStr(J));
+        }
+        try {
+            // solve J dx = error
+            Vector<X> dx = new Vector<>(J.solve(error));
+            // Vector<X> dx = getDxWithQRDecomp(error, J);
+            // the pseudoinverse should always work (slower)
+            // Matrix<X, Y> jInv = new Matrix<>(J.getStorage().pseudoInverse());
+            // Vector<X> dx = new Vector<>(jInv.times(error));
+
+            if (DEBUG)
+                System.out.printf("dx: %s\n", StrUtil.vecStr(dx));
+
+            // Too-high dx results in oscillation.
+            clamp(dx);
+            update(x, dx);
+            // Keep the x estimate within bounds.
+            limit(x);
+            return true;
+        } catch (SingularMatrixException ex) {
+            if (DEBUG)
+                System.out.println("solver cannot succeed");
+            return false;
+        }
     }
 
     /**
-     * Uses the uniform norm (maxabs), not the (perhaps expected) L2 norm.
+     * A solver that allows "wide" undetermined systems, but returns zero
+     * as an answer, which is clearly wrong.
+     * 
+     * Solves J dx = error for dx
+     */
+    Vector<X> getDxWithQRDecomp(Vector<Y> error, Matrix<Y, X> J) {
+        double[] dst = new double[m_xdim.getNum()];
+        EigenJNI.solveFullPivHouseholderQr(
+                J.getData(),
+                m_ydim.getNum(),
+                m_xdim.getNum(),
+                error.getData(),
+                m_ydim.getNum(),
+                1,
+                dst);
+        return new Vector<>(new Matrix<>(m_xdim, Nat.N1(), dst));
+    }
+
+    /**
+     * Radial distance is within tolerance.
      */
     private boolean within(Vector<Y> error) {
-        return error.maxAbs() < m_tolerance;
+        return error.norm() < m_tolerance;
     }
 
     /**
@@ -213,9 +240,17 @@ public class NewtonsMethod<X extends Num, Y extends Num> {
      * The "x" space is Euclidean, so using a simple sum is ok.
      */
     private void update(Vector<X> x, Vector<X> dx) {
+        if (DEBUG) {
+            System.out.println("NewtonsMethod.update()");
+            System.out.printf("x %s \n", StrUtil.vecStr(x));
+            System.out.printf("dx %s\n", StrUtil.vecStr(dx));
+        }
         for (int i = 0; i < x.getNumRows(); ++i) {
             double newXi = x.get(i) - dx.get(i);
             x.set(i, 0, newXi);
+        }
+        if (DEBUG) {
+            System.out.printf("new x %s \n", StrUtil.vecStr(x));
         }
     }
 

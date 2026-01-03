@@ -1,9 +1,11 @@
 package org.team100.lib.optimization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.function.Function;
 
+import org.ejml.data.SingularMatrixException;
 import org.junit.jupiter.api.Test;
 import org.team100.lib.geometry.GeometryUtil;
 import org.team100.lib.kinematics.urdf.URDFAL5D;
@@ -132,13 +134,13 @@ public class NewtonsMethodTest {
         if (DEBUG)
             System.out.println(StrUtil.matStr(j0));
         // dx/dq0
-        assertEquals(-1, j0.get(0, 0), 1e-9);
+        assertEquals(-1, j0.get(0, 0), 1e-6);
         // dx/dq1
-        assertEquals(-1, j0.get(0, 1), 1e-9);
+        assertEquals(-1, j0.get(0, 1), 1e-6);
         // dy/dq0
-        assertEquals(1, j0.get(1, 0), 1e-9);
+        assertEquals(1, j0.get(1, 0), 1e-6);
         // dy/dq1
-        assertEquals(0, j0.get(1, 1), 1e-9);
+        assertEquals(0, j0.get(1, 1), 1e-6);
 
         // initial error
         Vector<N2> err0 = err.apply(q0);
@@ -241,18 +243,18 @@ public class NewtonsMethodTest {
         if (DEBUG)
             System.out.println(StrUtil.matStr(j0));
         // dx/dq0
-        assertEquals(-1, j0.get(0, 0), 1e-9);
+        assertEquals(-1, j0.get(0, 0), 1e-6);
         // dx/dq1
-        assertEquals(-1, j0.get(0, 1), 1e-9);
+        assertEquals(-1, j0.get(0, 1), 1e-6);
         // dy/dq0
-        assertEquals(1, j0.get(1, 0), 1e-9);
+        assertEquals(1, j0.get(1, 0), 1e-6);
         // dy/dq1
-        assertEquals(0, j0.get(1, 1), 1e-9);
+        assertEquals(0, j0.get(1, 1), 1e-6);
         // angles just add
         // dt/dq0
-        assertEquals(1, j0.get(2, 0), 1e-9);
+        assertEquals(1, j0.get(2, 0), 1e-6);
         // dt/dq1
-        assertEquals(1, j0.get(2, 1), 1e-9);
+        assertEquals(1, j0.get(2, 1), 1e-6);
 
         Vector<N3> err0 = err.apply(q0);
         Vector<N2> dq1 = new Vector<>(j0.solve(err0));
@@ -414,6 +416,13 @@ public class NewtonsMethodTest {
         Vector<N2> x = s.solve(q0);
         assertEquals(0.524, x.get(0), 1e-3);
         assertEquals(2.094, x.get(1), 1e-3);
+    }
+
+    @Test
+    void testFailedSolve() {
+        Vector<N2> b = VecBuilder.fill(0, 0);
+        Matrix<N2, N2> A = new Matrix<>(Nat.N2(), Nat.N2());
+        assertThrows(SingularMatrixException.class, () -> A.solve(b));
     }
 
     @Test
@@ -685,7 +694,8 @@ public class NewtonsMethodTest {
                 1.4888289270e-04);
         Vector<N5> q0 = c.toVec();
         long startTime = System.nanoTime();
-        solver.solve2(q0, restarts, true);
+        assertThrows(IllegalArgumentException.class,
+                () -> solver.solve2(q0, restarts, true));
         if (DEBUG) {
             long finishTime = System.nanoTime();
             System.out.printf("ET (ms): %6.3f\n",

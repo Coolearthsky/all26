@@ -14,7 +14,7 @@ import org.team100.lib.subsystems.se2.MockSubsystemSE2;
 import org.team100.lib.testing.Timeless;
 import org.team100.lib.trajectory.Trajectory100;
 import org.team100.lib.trajectory.TrajectoryPlanner;
-import org.team100.lib.trajectory.path.PathFactory;
+import org.team100.lib.trajectory.path.PathFactorySE2;
 import org.team100.lib.trajectory.timing.ConstantConstraint;
 import org.team100.lib.trajectory.timing.TimingConstraint;
 import org.team100.lib.trajectory.timing.TrajectoryFactory;
@@ -41,7 +41,7 @@ public class DriveWithTrajectoryFunctionTest implements Timeless {
     List<TimingConstraint> constraints = List.of(
             new ConstantConstraint(log, 2, 2),
             new YawRateConstraint(log, 1, 1));
-    PathFactory pathFactory = new PathFactory();
+    PathFactorySE2 pathFactory = new PathFactorySE2();
     TrajectoryFactory trajectoryFactory = new TrajectoryFactory(constraints);
     TrajectoryPlanner planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
 
@@ -63,7 +63,8 @@ public class DriveWithTrajectoryFunctionTest implements Timeless {
                 log, subsystem, controller, viz, this::makeTrajectory);
         drive.initialize();
         stepTime();
-        System.out.println("x, y, theta");
+        if (DEBUG)
+            System.out.println("x, y, theta");
         for (int i = 0; i < 200; ++i) {
             drive.execute();
             subsystem.m_state = new ModelSE2(subsystem.m_state.pose(), subsystem.m_setpoint);
