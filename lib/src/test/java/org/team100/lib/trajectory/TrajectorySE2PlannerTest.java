@@ -29,6 +29,7 @@ import org.team100.lib.trajectory.timing.TimingConstraint;
 import org.team100.lib.trajectory.timing.TimingConstraintFactory;
 import org.team100.lib.trajectory.timing.TrajectorySE2Factory;
 import org.team100.lib.trajectory.timing.YawRateConstraint;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -353,8 +354,8 @@ class TrajectorySE2PlannerTest implements Timeless {
                 new Pose2d(0, 0, new Rotation2d()),
                 new Pose2d(10, 1, new Rotation2d()));
 
-        TrajectoryToVectorSeries converter = new TrajectoryToVectorSeries(0.5);
-        TrajectoryPlotter.plotOverlay(converter.convert(t));
+        TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.5);
+        ChartUtil.plotOverlay(converter.convert(t));
     }
 
     /** Turning in place does not work */
@@ -399,7 +400,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         TrajectorySE2Planner planner = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
         TrajectorySE2 trajectory = planner.generateTrajectory(waypoints, 0, 0);
 
-        TrajectoryPlotter.plotOverlay(new TrajectoryToVectorSeries(0.25).convert(trajectory));
+        ChartUtil.plotOverlay(new TrajectorySE2ToVectorSeries(0.25).convert(trajectory));
     }
 
     @Test
@@ -453,7 +454,7 @@ class TrajectorySE2PlannerTest implements Timeless {
             p0 = p1;
         }
 
-        TrajectoryPlotter.plotOverlay(new TrajectoryToVectorSeries(0.25).convert(trajectory));
+        ChartUtil.plotOverlay(new TrajectorySE2ToVectorSeries(0.25).convert(trajectory));
     }
 
     /**
@@ -486,8 +487,8 @@ class TrajectorySE2PlannerTest implements Timeless {
                         new DirectionSE2(0, 1, 0), 1));
         TrajectorySE2 t = p.restToRest(waypoints);
 
-        TrajectoryToVectorSeries converter = new TrajectoryToVectorSeries(0.5);
-        TrajectoryPlotter.plotOverlay(converter.convert(t));
+        TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.5);
+        ChartUtil.plotOverlay(converter.convert(t));
     }
 
     /**
@@ -521,9 +522,9 @@ class TrajectorySE2PlannerTest implements Timeless {
                         new DirectionSE2(0, 1, 0), 1));
         TrajectorySE2 t = p.restToRest(waypoints);
 
-        TrajectoryToVectorSeries converter = new TrajectoryToVectorSeries(0.3);
+        TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.3);
 
-        TrajectoryPlotter.plotOverlay(converter.convert(t));
+        ChartUtil.plotOverlay(converter.convert(t));
     }
 
 }

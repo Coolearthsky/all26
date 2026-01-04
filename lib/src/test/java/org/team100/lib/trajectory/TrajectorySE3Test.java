@@ -12,6 +12,7 @@ import org.team100.lib.trajectory.timing.ConstantConstraintSE3;
 import org.team100.lib.trajectory.timing.TimedStateSE3;
 import org.team100.lib.trajectory.timing.TimingConstraintSE3;
 import org.team100.lib.trajectory.timing.TrajectorySE3Factory;
+import org.team100.lib.util.ChartUtil3d;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -36,6 +37,8 @@ public class TrajectorySE3Test {
         TrajectorySE3Planner planner = new TrajectorySE3Planner(pathFactory, trajectoryFactory);
 
         TrajectorySE3 trajectory = planner.restToRest(waypoints);
+        ChartUtil3d.plot3dVectorSeries(
+                new TrajectorySE3ToVectorSeries(0.1).fromTrajectory(trajectory));
         if (DEBUG)
             trajectory.dump();
 

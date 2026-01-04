@@ -2,11 +2,14 @@ package org.team100.lib.trajectory.path.spline;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.team100.lib.geometry.DirectionSE3;
 import org.team100.lib.geometry.PathPointSE3;
 import org.team100.lib.geometry.WaypointSE3;
 import org.team100.lib.testing.Timeless;
+import org.team100.lib.util.ChartUtil3d;
 
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -52,6 +55,8 @@ public class SplineSE3Test implements Timeless {
                         new Rotation3d(0, Math.PI / 2, Math.PI / 2)),
                 new DirectionSE3(0, 1, -1, 0, 1, 0), 1);
         SplineSE3 spline = new SplineSE3(w0, w1);
+        ChartUtil3d.plot3dVectorSeries(
+                new SplineSE3ToVectorSeries(0.1).convert(List.of(spline)));
         if (DEBUG)
             spline.dump();
     }

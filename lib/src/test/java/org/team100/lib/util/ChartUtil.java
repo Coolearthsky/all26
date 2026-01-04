@@ -1,11 +1,28 @@
 package org.team100.lib.util;
 
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.util.List;
+
+import javax.swing.BoxLayout;
+import javax.swing.JDialog;
+import javax.swing.WindowConstants;
+
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.VectorRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.Range;
 import org.jfree.data.xy.VectorSeries;
 import org.jfree.data.xy.VectorSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 
 public class ChartUtil {
+    public static final boolean SHOW = false;
+    public static final int SIZE = 500;
 
     public static Range yRange(XYDataset dataset) {
         double max = Double.NEGATIVE_INFINITY;
@@ -38,5 +55,80 @@ public class ChartUtil {
         dataSet.addSeries(series);
         return dataSet;
     }
-    
+
+    /** plot each xy dataset as its own chart in a vertical list. */
+    public static void plotStacked(XYDataset... dataSets) {
+        if (!SHOW)
+            return;
+
+        // "true" means "modal" so wait for close.
+        JDialog frame = new JDialog((Frame) null, "plot", true);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+        for (XYDataset dataSet : dataSets) {
+            XYItemRenderer renderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
+            XYPlot plot = new XYPlot(
+                    dataSet, new NumberAxis("X"), new NumberAxis("Y"), renderer);
+
+            NumberAxis domain = (NumberAxis) plot.getDomainAxis();
+            NumberAxis range = (NumberAxis) plot.getRangeAxis();
+            domain.setRangeWithMargins(xRange(dataSet));
+            range.setRangeWithMargins(yRange(dataSet));
+
+            ChartPanel panel = new ChartPanel(new JFreeChart(plot));
+            panel.setPreferredSize(new Dimension(SIZE, SIZE / dataSets.length));
+            frame.add(panel);
+        }
+
+        frame.pack();
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    }
+
+    /** Plot multiple vector series on the same axes. */
+    public static void plotOverlay(List<VectorSeries> seriesList) {
+        if (!SHOW)
+            return;
+
+        // "true" means "modal" so wait for close.
+        JDialog frame = new JDialog((Frame) null, "plot", true);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        XYPlot plot = new XYPlot();
+
+        plot.setDomainAxis(new NumberAxis("X"));
+        plot.setRangeAxis(new NumberAxis("Y"));
+
+        Range xRange = null;
+        Range yRange = null;
+        for (int i = 0; i < seriesList.size(); ++i) {
+            VectorSeries series = seriesList.get(i);
+            VectorSeriesCollection dataSet = getDataSet(series);
+            plot.setDataset(i, dataSet);
+            XYItemRenderer renderer = new VectorRenderer();
+
+            plot.setRenderer(i, renderer);
+            if (xRange == null) {
+                xRange = xRange(dataSet);
+                yRange = yRange(dataSet);
+            } else {
+                xRange = Range.combine(xRange, xRange(dataSet));
+                yRange = Range.combine(yRange, yRange(dataSet));
+            }
+        }
+
+        NumberAxis domain = (NumberAxis) plot.getDomainAxis();
+        NumberAxis range = (NumberAxis) plot.getRangeAxis();
+        domain.setRangeWithMargins(xRange);
+        range.setRangeWithMargins(yRange);
+
+        ChartPanel panel = new ChartPanel(new JFreeChart(plot));
+        panel.setPreferredSize(new Dimension(SIZE, SIZE));
+        frame.add(panel);
+
+        frame.pack();
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+    }
+
 }

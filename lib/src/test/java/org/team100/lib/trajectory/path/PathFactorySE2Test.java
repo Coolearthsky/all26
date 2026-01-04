@@ -13,8 +13,8 @@ import org.team100.lib.geometry.PathPointSE2;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.testing.Timeless;
 import org.team100.lib.trajectory.PathToVectorSeries;
-import org.team100.lib.trajectory.TrajectoryPlotter;
 import org.team100.lib.trajectory.path.spline.SplineSE2;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -153,7 +153,7 @@ public class PathFactorySE2Test implements Timeless {
                         new DirectionSE2(1, 0, 0), 1));
         PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
         PathSE2 path = pathFactory.fromWaypoints(waypoints);
-        TrajectoryPlotter.plotOverlay(new PathToVectorSeries(0.1).convert(path));
+        ChartUtil.plotOverlay(new PathToVectorSeries(0.1).convert(path));
         assertEquals(59, path.length(), 0.001);
     }
 

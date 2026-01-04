@@ -9,14 +9,14 @@ import org.team100.lib.trajectory.timing.TimedStateSE2;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public class TrajectoryToVectorSeries {
+public class TrajectorySE2ToVectorSeries {
     private static final boolean DEBUG = false;
 
     private static final int POINTS = 20;
     /** Length of the vector indicating heading */
     private final double m_scale;
 
-    public TrajectoryToVectorSeries(double scale) {
+    public TrajectorySE2ToVectorSeries(double scale) {
         m_scale = scale;
     }
 

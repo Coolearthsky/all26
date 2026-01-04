@@ -14,11 +14,12 @@ import org.team100.lib.logging.TestLoggerFactory;
 import org.team100.lib.logging.primitive.TestPrimitiveLogger;
 import org.team100.lib.trajectory.path.PathFactorySE2;
 import org.team100.lib.trajectory.path.spline.SplineSE2;
-import org.team100.lib.trajectory.path.spline.SplineToVectorSeries;
+import org.team100.lib.trajectory.path.spline.SplineSE2ToVectorSeries;
 import org.team100.lib.trajectory.timing.ConstantConstraint;
 import org.team100.lib.trajectory.timing.TimingConstraint;
 import org.team100.lib.trajectory.timing.TrajectorySE2Factory;
 import org.team100.lib.trajectory.timing.YawRateConstraint;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -46,18 +47,18 @@ public class ParameterizationTest {
                                 new Translation2d(1, 0),
                                 new Rotation2d(0)),
                         new DirectionSE2(1, 0, 0), 0.001));
-        SplineToVectorSeries splineConverter = new SplineToVectorSeries(0.1);
-        TrajectoryPlotter.plotOverlay(splineConverter.convert(List.of(spline)));
+        SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
+        ChartUtil.plotOverlay(splineConverter.convert(List.of(spline)));
 
-        XYSeries sx = SplineToVectorSeries.x("x", List.of(spline));
-        XYSeries sxPrime = SplineToVectorSeries.xPrime("xprime", List.of(spline));
-        XYSeries sxPrimePrime = SplineToVectorSeries.xPrimePrime("xprimeprime", List.of(spline));
+        XYSeries sx = SplineSE2ToVectorSeries.x("x", List.of(spline));
+        XYSeries sxPrime = SplineSE2ToVectorSeries.xPrime("xprime", List.of(spline));
+        XYSeries sxPrimePrime = SplineSE2ToVectorSeries.xPrimePrime("xprimeprime", List.of(spline));
 
         XYDataset d1 = new XYSeriesCollection(sx);
         XYDataset d2 = new XYSeriesCollection(sxPrime);
         XYDataset d3 = new XYSeriesCollection(sxPrimePrime);
 
-        TrajectoryPlotter.plotStacked(d1, d2, d3);
+        ChartUtil.plotStacked(d1, d2, d3);
     }
 
     /**
@@ -79,19 +80,19 @@ public class ParameterizationTest {
                                 new Rotation2d(0)),
                         new DirectionSE2(0, 1, 0), 1));
 
-        SplineToVectorSeries splineConverter = new SplineToVectorSeries(0.1);
-        TrajectoryPlotter.plotOverlay(splineConverter.convert(List.of(spline)));
+        SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
+        ChartUtil.plotOverlay(splineConverter.convert(List.of(spline)));
 
-        XYSeries sx = SplineToVectorSeries.x("x", List.of(spline));
-        XYSeries sxPrime = SplineToVectorSeries.xPrime("xprime", List.of(spline));
-        XYSeries sxPrimePrime = SplineToVectorSeries.xPrimePrime("xprimeprime",
+        XYSeries sx = SplineSE2ToVectorSeries.x("x", List.of(spline));
+        XYSeries sxPrime = SplineSE2ToVectorSeries.xPrime("xprime", List.of(spline));
+        XYSeries sxPrimePrime = SplineSE2ToVectorSeries.xPrimePrime("xprimeprime",
                 List.of(spline));
 
         XYDataset d1 = new XYSeriesCollection(sx);
         XYDataset d2 = new XYSeriesCollection(sxPrime);
         XYDataset d3 = new XYSeriesCollection(sxPrimePrime);
 
-        TrajectoryPlotter.plotStacked(d1, d2, d3);
+        ChartUtil.plotStacked(d1, d2, d3);
     }
 
     /**
@@ -117,7 +118,7 @@ public class ParameterizationTest {
 
         XYSeries sx = PathToVectorSeries.x("spline", poses);
         XYDataset dataSet = new XYSeriesCollection(sx);
-        TrajectoryPlotter.plotStacked(dataSet);
+        ChartUtil.plotStacked(dataSet);
     }
 
     @Test
@@ -145,8 +146,8 @@ public class ParameterizationTest {
         if (DEBUG)
             System.out.printf("TRAJECTORY\n%s\n", trajectory);
 
-        TrajectoryToVectorSeries converter = new TrajectoryToVectorSeries(0.1);
-        TrajectoryPlotter.plotOverlay(converter.convert(trajectory));
+        TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.1);
+        ChartUtil.plotOverlay(converter.convert(trajectory));
 
         // XYSeries tx = TrajectoryToVectorSeries.x("x", trajectory);
         // XYSeries txDot = TrajectoryToVectorSeries.xdot("xdot", trajectory);

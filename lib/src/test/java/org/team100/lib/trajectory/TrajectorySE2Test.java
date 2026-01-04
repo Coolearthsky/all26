@@ -20,6 +20,7 @@ import org.team100.lib.trajectory.timing.TimedStateSE2;
 import org.team100.lib.trajectory.timing.TimingConstraint;
 import org.team100.lib.trajectory.timing.TimingConstraintFactory;
 import org.team100.lib.trajectory.timing.TrajectorySE2Factory;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -215,7 +216,8 @@ class TrajectorySE2Test implements Timeless {
         TrajectorySE2Factory generator = new TrajectorySE2Factory(constraints);
 
         TrajectorySE2 trajectory = generator.fromPath(path, 0, 0);
-        TrajectoryPlotter.plotOverlay(new TrajectoryToVectorSeries(1).convert(trajectory));
+        ChartUtil.plotOverlay(
+            new TrajectorySE2ToVectorSeries(1).convert(trajectory));
 
         assertEquals(313, trajectory.length());
 

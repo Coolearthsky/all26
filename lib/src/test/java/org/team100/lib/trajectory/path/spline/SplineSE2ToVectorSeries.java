@@ -9,14 +9,14 @@ import org.jfree.data.xy.XYSeries;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public class SplineToVectorSeries {
+public class SplineSE2ToVectorSeries {
     private static final boolean DEBUG = false;
 
     private static final double DS = 0.05;
     /** Length of the vector indicating heading */
     private final double m_scale;
 
-    public SplineToVectorSeries(double scale) {
+    public SplineSE2ToVectorSeries(double scale) {
         m_scale = scale;
     }
 

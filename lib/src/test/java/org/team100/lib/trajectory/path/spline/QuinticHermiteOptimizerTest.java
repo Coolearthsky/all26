@@ -6,7 +6,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.WaypointSE2;
-import org.team100.lib.trajectory.TrajectoryPlotter;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,7 +30,7 @@ public class QuinticHermiteOptimizerTest {
         splines.add(new SplineSE2(a, b));
         splines.add(new SplineSE2(b, c));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines));
 
     }
 
@@ -57,7 +57,7 @@ public class QuinticHermiteOptimizerTest {
         splines.add(new SplineSE2(e, f));
         splines.add(new SplineSE2(f, g));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines));
 
     }
 
@@ -85,7 +85,7 @@ public class QuinticHermiteOptimizerTest {
         splines2.add(new SplineSE2(j, k));
         splines2.add(new SplineSE2(k, l));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines2));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines2));
 
     }
 
@@ -105,7 +105,7 @@ public class QuinticHermiteOptimizerTest {
         splines.add(new SplineSE2(a, b));
         splines.add(new SplineSE2(b, c));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines));
 
     }
 
@@ -130,7 +130,7 @@ public class QuinticHermiteOptimizerTest {
         splines.add(new SplineSE2(e, f));
         splines.add(new SplineSE2(f, g));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines));
     }
 
     @Test
@@ -158,7 +158,7 @@ public class QuinticHermiteOptimizerTest {
         splines.add(new SplineSE2(j, k));
         splines.add(new SplineSE2(k, l));
 
-        TrajectoryPlotter.plotOverlay(new SplineToVectorSeries(5).convert(splines));
+        ChartUtil.plotOverlay(new SplineSE2ToVectorSeries(5).convert(splines));
 
     }
 }
