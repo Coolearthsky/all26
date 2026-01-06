@@ -261,14 +261,21 @@ public class SplineSE3 {
      * see MATH.md
      */
     private Vector<N3> K(double s) {
-        // this derivation works for any dimensions.
-        Vector<N3> rprime = VecBuilder.fill(dx(s), dy(s), dz(s));
-        Vector<N3> rprimeprime = VecBuilder.fill(ddx(s), ddy(s), ddz(s));
-        double rprimenorm = rprime.norm();
-        Vector<N3> T = rprime.div(rprimenorm);
-        Vector<N3> p2 = rprimeprime.div(rprimenorm * rprimenorm);
-        Vector<N3> K = p2.minus(T.times(T.dot(p2)));
-        return K;
+        return SplineUtil.K(rprime(s), rprimeprime(s));
+    }
+
+    /**
+     * dr/ds, position derivative with respect to parameter, s.
+     */
+    private Vector<N3> rprime(double s) {
+        return VecBuilder.fill(dx(s), dy(s), dz(s));
+    }
+
+    /**
+     * d^2r/ds^2, second derivative of position with respect to parameter, s
+     */
+    private Vector<N3> rprimeprime(double s) {
+        return VecBuilder.fill(ddx(s), ddy(s), ddz(s));
     }
 
     ////////////////////////////////////////////////////////////
