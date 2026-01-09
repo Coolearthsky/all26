@@ -37,18 +37,14 @@ public class ParameterizationTest {
         // a straight line in x, since the direction is also +x
         SplineSE2 spline = new SplineSE2(
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
                         new DirectionSE2(1, 0, 0), 0.001),
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(1, 0), new Rotation2d(0)),
                         new DirectionSE2(1, 0, 0), 0.001));
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(spline));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         XYSeries sx = SplineSE2ToVectorSeries.x("x", List.of(spline));
         XYSeries sxPrime = SplineSE2ToVectorSeries.xPrime("xprime", List.of(spline));
@@ -57,7 +53,6 @@ public class ParameterizationTest {
         XYDataset d1 = new XYSeriesCollection(sx);
         XYDataset d2 = new XYSeriesCollection(sxPrime);
         XYDataset d3 = new XYSeriesCollection(sxPrimePrime);
-
         ChartUtil.plotStacked(d1, d2, d3);
     }
 
@@ -70,19 +65,15 @@ public class ParameterizationTest {
         // note the zero scale here to force zero velocity at the ends
         SplineSE2 spline = new SplineSE2(
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
                         new DirectionSE2(0, 1, 0), 1),
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(1, 0), new Rotation2d(0)),
                         new DirectionSE2(0, 1, 0), 1));
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(spline));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         XYSeries sx = SplineSE2ToVectorSeries.x("x", List.of(spline));
         XYSeries sxPrime = SplineSE2ToVectorSeries.xPrime("xprime", List.of(spline));
@@ -92,7 +83,6 @@ public class ParameterizationTest {
         XYDataset d1 = new XYSeriesCollection(sx);
         XYDataset d2 = new XYSeriesCollection(sxPrime);
         XYDataset d3 = new XYSeriesCollection(sxPrimePrime);
-
         ChartUtil.plotStacked(d1, d2, d3);
     }
 
@@ -106,14 +96,10 @@ public class ParameterizationTest {
         TrajectorySE2Planner p = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
         List<WaypointSE2> waypoints = List.of(
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
                         new DirectionSE2(0, 1, 0), 1),
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(0)),
+                        new Pose2d(new Translation2d(1, 0), new Rotation2d(0)),
                         new DirectionSE2(0, 1, 0), 1));
         TrajectorySE2 trajectory = p.generateTrajectory(waypoints, 0, 0);
 
@@ -123,15 +109,7 @@ public class ParameterizationTest {
 
         TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.1);
         List<VectorSeries> series = converter.convert(trajectory);
-        ChartUtil.plotOverlay(series, 100);
-
-        // XYSeries tx = TrajectoryToVectorSeries.x("x", trajectory);
-        // XYSeries txDot = TrajectoryToVectorSeries.xdot("xdot", trajectory);
-        // XYDataset d1 = TrajectoryPlotter.collect(tx);
-        // XYDataset d2 = TrajectoryPlotter.collect(txDot);
-
-        // TrajectoryPlotter.actuallyPlot("trajectory", renderer, d1, d2);
-
+        ChartUtil.plotOverlay(series, 500);
     }
 
 }

@@ -94,7 +94,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(s));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         Translation2d t = s.entry(0).point().waypoint().pose().getTranslation();
         assertEquals(0, t.getX(), DELTA);
@@ -126,7 +126,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(s));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         Translation2d t = s.entry(0).point().waypoint().pose().getTranslation();
         assertEquals(0, t.getX(), DELTA);
@@ -161,7 +161,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(s));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         // now that the magic numbers apply to the rotational scaling, the heading rate
         // is constant.
@@ -210,7 +210,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(s));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         // now that the magic numbers apply to the rotational scaling, the heading rate
         // is constant.
@@ -252,7 +252,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(s));
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
     }
 
     /** Turning in place splines do not work. */
@@ -303,7 +303,7 @@ class SplineSE2Test implements Timeless {
         List<SplineSE2> splines = List.of(s0, s1, s2, s3);
         checkCircle(splines, 0.008, 0.006);
         List<VectorSeries> series = new SplineSE2ToVectorSeries(0.1).convert(splines);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 300);
     }
 
     @Test
@@ -379,35 +379,23 @@ class SplineSE2Test implements Timeless {
 
     @Test
     void testLine() {
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(0, 0), Rotation2d.kZero),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 0), new Rotation2d(1)),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w2 = new WaypointSE2(
+                new Pose2d(new Translation2d(2, 0), Rotation2d.k180deg),
+                new DirectionSE2(1, 0, 0), 1);
         // turn a bit to the left
-        SplineSE2 s0 = new SplineSE2(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                Rotation2d.kZero),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(1)),
-                        new DirectionSE2(1, 0, 0), 1));
+        SplineSE2 s0 = new SplineSE2(w0, w1);
         // turn much more to the left
-        SplineSE2 s1 = new SplineSE2(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(1)),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(2, 0),
-                                Rotation2d.k180deg),
-                        new DirectionSE2(1, 0, 0), 1));
-        List<SplineSE2> splines = new ArrayList<>();
-        splines.add(s0);
-        splines.add(s1);
+        SplineSE2 s1 = new SplineSE2(w1, w2);
+
+        List<SplineSE2> splines = List.of(s0, s1);
         List<VectorSeries> series = new SplineSE2ToVectorSeries(0.1).convert(splines);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
     }
 
     /**
@@ -416,39 +404,28 @@ class SplineSE2Test implements Timeless {
      * * start facing towards the driver
      * * back up
      * * rotate towards +y, also drive towards +y
-     * 
-     * Does optimization really help here?
      */
     @Test
     void testPath0() {
         double scale = 0.7;
         WaypointSE2 p0 = new WaypointSE2(
-                new Pose2d(
-                        new Translation2d(0, 0),
-                        new Rotation2d(-1, 0)),
+                new Pose2d(new Translation2d(0, 0), new Rotation2d(-1, 0)),
                 new DirectionSE2(1, 0, 0), scale);
         WaypointSE2 p1 = new WaypointSE2(
-                new Pose2d(
-                        new Translation2d(0.707, 0.293),
-                        new Rotation2d(-1, 1)),
+                new Pose2d(new Translation2d(0.707, 0.293), new Rotation2d(-1, 1)),
                 new DirectionSE2(1, 1, -1), scale);
         WaypointSE2 p2 = new WaypointSE2(
-                new Pose2d(
-                        new Translation2d(1, 1),
-                        new Rotation2d(0, 1)),
+                new Pose2d(new Translation2d(1, 1), new Rotation2d(0, 1)),
                 new DirectionSE2(0, 1, 0), scale);
-
         if (DEBUG)
             System.out.println("s01");
         SplineSE2 s01 = new SplineSE2(p0, p1);
         if (DEBUG)
             System.out.println("s12");
         SplineSE2 s12 = new SplineSE2(p1, p2);
-        List<SplineSE2> splines = new ArrayList<>();
-        splines.add(s01);
-        splines.add(s12);
+        List<SplineSE2> splines = List.of(s01, s12);
         List<VectorSeries> series = new SplineSE2ToVectorSeries(0.1).convert(splines);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
     }
 
     @Test
@@ -474,12 +451,10 @@ class SplineSE2Test implements Timeless {
                 new Pose2d(new Translation2d(1, 1), Rotation2d.kZero),
                 new DirectionSE2(0, 1, 0), 1);
         SplineSE2 s1 = new SplineSE2(w2, w3);
-        List<SplineSE2> splines = new ArrayList<>();
-        splines.add(s0);
-        splines.add(s1);
+        List<SplineSE2> splines = List.of(s0, s1);
 
         List<VectorSeries> series = new SplineSE2ToVectorSeries(0.1).convert(splines);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         for (SplineSE2 s : splines) {
             if (DEBUG)
@@ -496,7 +471,7 @@ class SplineSE2Test implements Timeless {
         if (DEBUG)
             traj.dump();
         List<VectorSeries> series2 = new TrajectorySE2ToVectorSeries(0.1).convert(traj);
-        ChartUtil.plotOverlay(series2, 100);
+        ChartUtil.plotOverlay(series2, 500);
     }
 
     @Test
@@ -505,14 +480,10 @@ class SplineSE2Test implements Timeless {
         // radius is 1 m.
         SplineSE2 s0 = new SplineSE2(
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, -1),
-                                Rotation2d.kZero),
+                        new Pose2d(new Translation2d(0, -1), Rotation2d.kZero),
                         new DirectionSE2(1, 0, 0), 1.2),
                 new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                Rotation2d.kZero),
+                        new Pose2d(new Translation2d(1, 0), Rotation2d.kZero),
                         new DirectionSE2(0, 1, 0), 1.2));
         if (DEBUG) {
             for (double s = 0; s < 1; s += 0.03) {
@@ -525,7 +496,7 @@ class SplineSE2Test implements Timeless {
 
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(splines);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
 
         PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.05, 0.05);
         PathSE2 path = pathFactory.get(splines);
@@ -559,7 +530,7 @@ class SplineSE2Test implements Timeless {
         TrajectorySE2ToVectorSeries converter = new TrajectorySE2ToVectorSeries(0.1);
 
         List<VectorSeries> series2 = converter.convert(trajectory);
-        ChartUtil.plotOverlay(series2, 100);
+        ChartUtil.plotOverlay(series2, 500);
 
         if (DEBUG)
             System.out.printf("trajectory %s\n", trajectory);

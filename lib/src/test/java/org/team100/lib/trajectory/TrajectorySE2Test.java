@@ -196,7 +196,7 @@ class TrajectorySE2Test implements Timeless {
 
         PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.02, 0.1);
         PathSE2 path = pathFactory.get(splines);
-        assertEquals(22.734, path.getMaxDistance(), 0.001);
+        assertEquals(22.734, path.distance(path.length() - 1), 0.001);
 
         start = System.nanoTime();
         for (int rep = 0; rep < reps; ++rep) {

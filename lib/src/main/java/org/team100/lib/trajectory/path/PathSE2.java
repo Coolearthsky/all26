@@ -11,15 +11,9 @@ import org.team100.lib.geometry.Metrics;
  * There's no timing information here. For that, see TrajectorySE2
  */
 public class PathSE2 {
-    // if an interpolated point is more than this far from an endpoint,
-    // it indicates the endpoints are too far apart, including too far apart
-    // in rotation, which is an aspect of the path scheduling that the
-    // scheduler can't see
-    // TODO: make this a constructor parameter.
-    static final double INTERPOLATION_LIMIT = 0.3;
     private final List<PathSE2Entry> m_points;
     /**
-     * Translational distance, just the xy plane, not the Twist arc
+     * Cumulative translational distance, just the xy plane, not the Twist arc
      * or anything else, just xy distance.
      */
     final double[] m_distances;
@@ -42,10 +36,6 @@ public class PathSE2 {
         }
     }
 
-    public boolean isEmpty() {
-        return m_points.isEmpty();
-    }
-
     public int length() {
         return m_points.size();
     }
@@ -56,11 +46,10 @@ public class PathSE2 {
         return m_points.get(index);
     }
 
-    /** This is always non-negative. */
-    public double getMaxDistance() {
+    public double distance(int index) {
         if (m_points.isEmpty())
-            return 0.0;
-        return m_distances[m_distances.length - 1];
+            return 0;
+        return m_distances[index];
     }
 
     @Override

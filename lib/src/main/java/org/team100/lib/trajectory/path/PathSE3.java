@@ -37,4 +37,10 @@ public class PathSE3 {
             return null;
         return m_points.get(index);
     }
+
+    public double distance(int index) {
+        if (m_points.isEmpty())
+            return 0;
+        return m_distances[index];
+    }
 }

@@ -143,7 +143,7 @@ public class PathUtil {
      * dense as that. Maybe that's ok.
      */
     static PathSE2Point[] resample(PathSE2 p, double step) {
-        double maxDistance = p.getMaxDistance();
+        double maxDistance = p.distance(p.length() - 1);
         if (maxDistance == 0)
             throw new IllegalArgumentException("max distance must be greater than zero");
         int num_states = (int) Math.ceil(maxDistance / step) + 1;
@@ -177,7 +177,13 @@ public class PathUtil {
      * @param distance in meters, always a non-negative number.
      */
     public static PathSE2Point sample(PathSE2 p, double distance) {
-        if (distance >= p.getMaxDistance()) {
+        // if an interpolated point is more than this far from an endpoint,
+        // it indicates the endpoints are too far apart, including too far apart
+        // in rotation, which is an aspect of the path scheduling that the
+        // scheduler can't see
+        // TODO: make this a constructor parameter.
+        double INTERPOLATION_LIMIT = 0.3;
+        if (distance >= p.distance(p.length() - 1)) {
             // off the end
             return p.getEntry(p.length() - 1).point();
         }
@@ -204,7 +210,7 @@ public class PathUtil {
                 double l0 = Metrics.l2Norm(t0);
                 Twist2d t1 = p1.waypoint().course().minus(lerp.point().waypoint().course());
                 double l1 = Metrics.l2Norm(t1);
-                if (Math.max(l0, l1) > PathSE2.INTERPOLATION_LIMIT)
+                if (Math.max(l0, l1) > INTERPOLATION_LIMIT)
                     System.out.printf(
                             "WARNING!  Interpolated value too far away, p0=%s, p1=%s, t0=%s t1=%s.  This usually indicates a sharp corner in the path, which is not allowed.",
                             p0, p1, t0, t1);

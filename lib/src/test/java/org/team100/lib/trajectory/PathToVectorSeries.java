@@ -23,7 +23,7 @@ public class PathToVectorSeries {
     /** Maps x to x, y to y */
     public List<VectorSeries> convert(PathSE2 path) {
         VectorSeries s = new VectorSeries("path");
-        double l = path.getMaxDistance();
+        double l = path.distance(path.length() - 1);
         double dl = l / 20;
         for (double d = 0; d < l; d += dl) {
             if (DEBUG)

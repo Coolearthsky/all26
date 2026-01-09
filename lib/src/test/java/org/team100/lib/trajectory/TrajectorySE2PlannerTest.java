@@ -393,7 +393,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         TrajectorySE2 trajectory = planner.generateTrajectory(waypoints, 0, 0);
 
         List<VectorSeries> series = new TrajectorySE2ToVectorSeries(0.25).convert(trajectory);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 300);
     }
 
     @Test
@@ -448,7 +448,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         }
 
         List<VectorSeries> series = new TrajectorySE2ToVectorSeries(0.25).convert(trajectory);
-        ChartUtil.plotOverlay(series, 100);
+        ChartUtil.plotOverlay(series, 500);
     }
 
     /**

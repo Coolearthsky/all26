@@ -72,26 +72,28 @@ public class SplineUtilTest {
         SplineSE2ToVectorSeries splineConverter = new SplineSE2ToVectorSeries(0.1);
         List<VectorSeries> series = splineConverter.convert(List.of(toolpoint));
 
+        // velocity vectors
         VectorSeries v = new VectorSeries("endpoints");
-        VectorSeries a = new VectorSeries("endpoints");
         for (double s = 0; s < 1.001; s += 0.05) {
             Vector<N2> p = SplineUtil.offsetR(toolpoint, l, s);
             Vector<N2> pprime = SplineUtil.offsetRprime(toolpoint, l, s);
-            Vector<N2> pprimeprime = SplineUtil.offsetRprimeprime(toolpoint, l, s);
             Vector<N2> rprime = toolpoint.rprime(s);
-            Vector<N2> rprimeprime = toolpoint.rprimeprime(s);
-            // System.out.printf("s %f pprime %s rprime %s\n", s, StrUtil.vecStr(pprime),
-            // StrUtil.vecStr(rprime));
-            // System.out.printf("s %f p'' %s r'' %s\n", s,
-            // StrUtil.vecStr(pprimeprime), StrUtil.vecStr(rprimeprime));
             double dx = pprime.get(0) + rprime.get(0);
             double dy = pprime.get(1) + rprime.get(1);
             v.add(p.get(0), p.get(1), dx * 0.05, dy * 0.05);
+        }
+        series.add(v);
+
+        // acceleration vectors
+        VectorSeries a = new VectorSeries("endpoints");
+        for (double s = 0; s < 1.001; s += 0.05) {
+            Vector<N2> p = SplineUtil.offsetR(toolpoint, l, s);
+            Vector<N2> pprimeprime = SplineUtil.offsetRprimeprime(toolpoint, l, s);
+            Vector<N2> rprimeprime = toolpoint.rprimeprime(s);
             double ax = pprimeprime.get(0) + rprimeprime.get(0);
             double ay = pprimeprime.get(1) + rprimeprime.get(1);
             a.add(p.get(0), p.get(1), ax * 0.05, ay * 0.05);
         }
-        series.add(v);
         series.add(a);
 
         ChartUtil.plotOverlay(series, 500);

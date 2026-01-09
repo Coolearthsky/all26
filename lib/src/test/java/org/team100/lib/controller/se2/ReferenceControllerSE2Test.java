@@ -163,7 +163,6 @@ public class ReferenceControllerSE2Test implements Timeless {
         List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
         PathSE2Factory pathFactory = new PathSE2Factory(stepSize, 2, 0.1);
         PathSE2 path = pathFactory.get(splines);
-        assertFalse(path.isEmpty());
 
         TrajectorySE2Factory u = new TrajectorySE2Factory(Arrays.asList());
         TrajectorySE2 trajectory = u.fromPath(path, start_vel, end_vel);
