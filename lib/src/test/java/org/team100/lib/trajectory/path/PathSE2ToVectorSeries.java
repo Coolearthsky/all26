@@ -12,6 +12,8 @@ import edu.wpi.first.math.numbers.N2;
 
 public class PathSE2ToVectorSeries {
     private static final boolean DEBUG = true;
+    private static final int POINTS = 50;
+
     /** Length of the vector indicating heading */
     private final double m_scale;
 
@@ -23,7 +25,7 @@ public class PathSE2ToVectorSeries {
     public List<VectorSeries> convert(PathSE2 path) {
         VectorSeries s = new VectorSeries("path");
         double l = path.distance(path.length() - 1);
-        double dl = l / 20;
+        double dl = l / POINTS;
         for (double d = 0; d < l; d += dl) {
             PathSE2Point point = PathUtil.sample(path, d);
             Pose2d p = point.waypoint().pose();
@@ -42,7 +44,7 @@ public class PathSE2ToVectorSeries {
     public List<VectorSeries> curvature(PathSE2 path) {
         VectorSeries series = new VectorSeries("path");
         double l = path.distance(path.length() - 1);
-        double dl = l / 20;
+        double dl = l / POINTS;
         for (double d = 0; d < l; d += dl) {
             PathSE2Point point = PathUtil.sample(path, d);
             Pose2d p = point.waypoint().pose();
