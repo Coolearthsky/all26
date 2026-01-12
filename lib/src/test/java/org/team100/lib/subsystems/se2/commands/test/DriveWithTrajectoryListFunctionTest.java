@@ -19,12 +19,12 @@ import org.team100.lib.logging.TestLoggerFactory;
 import org.team100.lib.logging.primitive.TestPrimitiveLogger;
 import org.team100.lib.subsystems.swerve.Fixture;
 import org.team100.lib.testing.Timeless;
-import org.team100.lib.trajectory.TrajectoryPlanner;
+import org.team100.lib.trajectory.TrajectorySE2Factory;
+import org.team100.lib.trajectory.TrajectorySE2Planner;
+import org.team100.lib.trajectory.constraint.TimingConstraint;
+import org.team100.lib.trajectory.constraint.TimingConstraintFactory;
 import org.team100.lib.trajectory.examples.TrajectoryExamples;
-import org.team100.lib.trajectory.path.PathFactorySE2;
-import org.team100.lib.trajectory.timing.TimingConstraint;
-import org.team100.lib.trajectory.timing.TimingConstraintFactory;
-import org.team100.lib.trajectory.timing.TrajectoryFactory;
+import org.team100.lib.trajectory.path.PathSE2Factory;
 import org.team100.lib.visualization.TrajectoryVisualization;
 
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -44,9 +44,9 @@ class DriveWithTrajectoryListFunctionTest implements Timeless {
     void testSimple() throws IOException {
         Fixture fixture = new Fixture();
         List<TimingConstraint> constraints = new TimingConstraintFactory(fixture.swerveKinodynamics).allGood(logger);
-        TrajectoryFactory trajectoryFactory = new TrajectoryFactory(constraints);
-        PathFactorySE2 pathFactory = new PathFactorySE2();
-        TrajectoryPlanner planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
+        TrajectorySE2Factory trajectoryFactory = new TrajectorySE2Factory(constraints);
+        PathSE2Factory pathFactory = new PathSE2Factory();
+        TrajectorySE2Planner planner = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
         TrajectoryExamples ex = new TrajectoryExamples(planner);
         // this initial step is required since the timebase is different?
         stepTime();

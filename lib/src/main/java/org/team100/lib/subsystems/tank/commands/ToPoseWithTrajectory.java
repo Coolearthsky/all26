@@ -7,13 +7,13 @@ import org.team100.lib.framework.TimedRobot100;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.logging.LoggerFactory;
 import org.team100.lib.subsystems.tank.TankDrive;
-import org.team100.lib.trajectory.Trajectory100;
-import org.team100.lib.trajectory.TrajectoryPlanner;
-import org.team100.lib.trajectory.path.PathFactorySE2;
-import org.team100.lib.trajectory.timing.ConstantConstraint;
-import org.team100.lib.trajectory.timing.TrajectoryFactory;
-import org.team100.lib.trajectory.timing.TimedState;
-import org.team100.lib.trajectory.timing.TimingConstraint;
+import org.team100.lib.trajectory.TrajectorySE2Entry;
+import org.team100.lib.trajectory.TrajectorySE2;
+import org.team100.lib.trajectory.TrajectorySE2Factory;
+import org.team100.lib.trajectory.TrajectorySE2Planner;
+import org.team100.lib.trajectory.constraint.ConstantConstraint;
+import org.team100.lib.trajectory.constraint.TimingConstraint;
+import org.team100.lib.trajectory.path.PathSE2Factory;
 import org.team100.lib.visualization.TrajectoryVisualization;
 
 import edu.wpi.first.math.controller.LTVUnicycleController;
@@ -26,11 +26,11 @@ public class ToPoseWithTrajectory extends Command {
     private final Pose2d m_goal;
     private final TankDrive m_drive;
     private final TrajectoryVisualization m_viz;
-    private final TrajectoryPlanner m_planner;
+    private final TrajectorySE2Planner m_planner;
     private final LTVUnicycleController m_controller;
 
     private double m_startTimeS;
-    private Trajectory100 m_trajectory;
+    private TrajectorySE2 m_trajectory;
 
     public ToPoseWithTrajectory(
             LoggerFactory parent,
@@ -42,9 +42,9 @@ public class ToPoseWithTrajectory extends Command {
         m_drive = drive;
         m_viz = viz;
         List<TimingConstraint> constraints = List.of(new ConstantConstraint(log, 1, 1));
-        TrajectoryFactory trajectoryFactory = new TrajectoryFactory(constraints);
-        PathFactorySE2 pathFactory = new PathFactorySE2();
-        m_planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
+        TrajectorySE2Factory trajectoryFactory = new TrajectorySE2Factory(constraints);
+        PathSE2Factory pathFactory = new PathSE2Factory();
+        m_planner = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
         m_controller = new LTVUnicycleController(0.020);
         addRequirements(drive);
     }
@@ -66,13 +66,13 @@ public class ToPoseWithTrajectory extends Command {
                 return;
             // current for position error
             double t = progress();
-            TimedState current = m_trajectory.sample(t);
+            TrajectorySE2Entry current = m_trajectory.sample(t);
             // next for feedforward (and selecting K)
-            TimedState next = m_trajectory.sample(t + TimedRobot100.LOOP_PERIOD_S);
+            TrajectorySE2Entry next = m_trajectory.sample(t + TimedRobot100.LOOP_PERIOD_S);
             Pose2d currentPose = m_drive.getPose();
-            Pose2d poseReference = current.point().waypoint().pose();
-            double velocityReference = next.velocityM_S();
-            double omegaReference = next.velocityM_S() * next.point().getHeadingRateRad_M();
+            Pose2d poseReference = current.point().point().waypoint().pose();
+            double velocityReference = next.point().velocity();
+            double omegaReference = next.point().velocity() * next.point().point().waypoint().course().headingRate();
             ChassisSpeeds speeds = m_controller.calculate(
                     currentPose, poseReference, velocityReference, omegaReference);
             m_drive.setVelocity(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);

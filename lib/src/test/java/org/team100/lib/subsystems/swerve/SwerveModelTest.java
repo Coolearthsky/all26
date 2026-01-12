@@ -4,12 +4,12 @@ package org.team100.lib.subsystems.swerve;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
-import org.team100.lib.geometry.WaypointSE2;
-import org.team100.lib.geometry.PathPointSE2;
 import org.team100.lib.geometry.VelocitySE2;
+import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.state.ModelSE2;
-import org.team100.lib.trajectory.timing.TimedState;
+import org.team100.lib.trajectory.path.PathSE2Point;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,13 +28,11 @@ class ModelSE2Test {
 
     @Test
     void testTimedState() {
-        ModelSE2 s = ModelSE2.fromTimedState(
-                new TimedState(
-                        new PathPointSE2(
-                                WaypointSE2.irrotational(
-                                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                                0, 0),
-                        0, 0, 0));
+        PathSE2Point p = new PathSE2Point(
+                WaypointSE2.irrotational(
+                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
+                 VecBuilder.fill(0, 0));
+        ModelSE2 s = ModelSE2.fromMovingPathPointSE2(p, 0);
         assertEquals(0, s.x().x(), DELTA);
         assertEquals(0, s.x().v(), DELTA);
         // assertEquals(0, s.x().a(), DELTA);
@@ -45,13 +43,11 @@ class ModelSE2Test {
 
     @Test
     void testTimedState2() {
-        ModelSE2 s = ModelSE2.fromTimedState(
-                new TimedState(
-                        new PathPointSE2(
-                                WaypointSE2.irrotational(
-                                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                                0, 0),
-                        0, 0, 1));
+        PathSE2Point p = new PathSE2Point(
+                WaypointSE2.irrotational(
+                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
+                 VecBuilder.fill(0, 0));
+        ModelSE2 s = ModelSE2.fromMovingPathPointSE2(p, 0);
         assertEquals(0, s.x().x(), DELTA);
         assertEquals(0, s.x().v(), DELTA);
         // assertEquals(1, s.x().a(), DELTA);
@@ -62,13 +58,11 @@ class ModelSE2Test {
 
     @Test
     void testTimedState3() {
-        ModelSE2 s = ModelSE2.fromTimedState(
-                new TimedState(
-                        new PathPointSE2(
-                                WaypointSE2.irrotational(
-                                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                                0, 0),
-                        0, 1, 0));
+        PathSE2Point p = new PathSE2Point(
+                WaypointSE2.irrotational(
+                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
+                 VecBuilder.fill(0, 0));
+        ModelSE2 s = ModelSE2.fromMovingPathPointSE2(p, 1);
         assertEquals(0, s.x().x(), DELTA);
         assertEquals(1, s.x().v(), DELTA);
         // assertEquals(0, s.x().a(), DELTA);
@@ -80,13 +74,10 @@ class ModelSE2Test {
     /** +x motion, positive curvature => +y accel. */
     @Test
     void testTimedState4() {
-        ModelSE2 s = ModelSE2.fromTimedState(
-                new TimedState(
-                        new PathPointSE2(
-                                WaypointSE2.irrotational(
-                                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                                0, 1),
-                        0, 1, 0));
+        PathSE2Point p = new PathSE2Point(
+                WaypointSE2.irrotational(new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
+                VecBuilder.fill(0, 1));
+        ModelSE2 s = ModelSE2.fromMovingPathPointSE2(p, 1);
         assertEquals(0, s.x().x(), DELTA);
         assertEquals(1, s.x().v(), DELTA);
         // assertEquals(0, s.x().a(), DELTA);

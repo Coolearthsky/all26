@@ -4,18 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.team100.lib.commands.MoveAndHold;
+import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.logging.LoggerFactory;
 import org.team100.lib.subsystems.prr.AnalyticalJacobian;
 import org.team100.lib.subsystems.prr.ElevatorArmWristKinematics;
 import org.team100.lib.subsystems.se2.commands.GoToPosePosition;
-import org.team100.lib.trajectory.TrajectoryPlanner;
-import org.team100.lib.trajectory.path.PathFactorySE2;
-import org.team100.lib.trajectory.timing.ConstantConstraint;
-import org.team100.lib.trajectory.timing.TimingConstraint;
-import org.team100.lib.trajectory.timing.TorqueConstraint;
-import org.team100.lib.trajectory.timing.TrajectoryFactory;
-import org.team100.lib.trajectory.timing.YawRateConstraint;
+import org.team100.lib.trajectory.TrajectorySE2Factory;
+import org.team100.lib.trajectory.TrajectorySE2Planner;
+import org.team100.lib.trajectory.path.PathSE2Factory;
+import org.team100.lib.trajectory.constraint.ConstantConstraint;
+import org.team100.lib.trajectory.constraint.TimingConstraint;
+import org.team100.lib.trajectory.constraint.TorqueConstraint;
+import org.team100.lib.trajectory.constraint.YawRateConstraint;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -24,7 +25,7 @@ public class MechTrajectories extends Command {
 
     private final LoggerFactory m_log;
     private final CalgamesMech m_subsystem;
-    private final TrajectoryPlanner m_planner;
+    private final TrajectorySE2Planner m_planner;
 
     public MechTrajectories(
             LoggerFactory parent,
@@ -46,31 +47,24 @@ public class MechTrajectories extends Command {
         // These finer grains make smoother paths and schedules but
         // take longer to compute, so if it takes too long, make these
         // numbers bigger!
-        TrajectoryFactory trajectoryFactory = new TrajectoryFactory(c);
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.05, 0.01, 0.01, 0.1);
-        m_planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
+        TrajectorySE2Factory trajectoryFactory = new TrajectorySE2Factory(c);
+        PathSE2Factory pathFactory = new PathSE2Factory(0.05, 0.01, 0.1);
+        m_planner = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
     }
 
     /** A command that goes from the start to the end and then finishes. */
-    public Command terminal(String name, WaypointSE2 start, WaypointSE2 end) {
-
-        /** Use the start course and ignore the start pose for now */
+    public Command terminal(String name, DirectionSE2 startCourse, WaypointSE2 end) {
         MoveAndHold f = new GoToPosePosition(
-                m_log, m_subsystem, start.course().toRotation(), end, m_planner);
-        return f
-                .until(f::isDone)
-                .withName(name);
+                m_log, m_subsystem, startCourse, end, m_planner);
+        return f.until(f::isDone).withName(name);
     }
 
     /** A command that goes from the start to the end and then waits forever. */
-    public MoveAndHold endless(String name, WaypointSE2 start, WaypointSE2 end) {
-
-        /** Use the start course and ignore the start pose for now */
+    public MoveAndHold endless(String name, DirectionSE2 startCourse, WaypointSE2 end) {
         GoToPosePosition c = new GoToPosePosition(
-                m_log, m_subsystem, start.course().toRotation(), end, m_planner);
+                m_log, m_subsystem, startCourse, end, m_planner);
         c.setName(name);
         return c;
-
     }
 
 }

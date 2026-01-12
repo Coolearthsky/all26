@@ -1,19 +1,23 @@
 package org.team100.lib.trajectory.path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jfree.data.xy.VectorSeries;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.junit.jupiter.api.Test;
 import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.GeometryUtil;
-import org.team100.lib.geometry.PathPointSE2;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.testing.Timeless;
-import org.team100.lib.trajectory.TrajectoryPlotter;
-import org.team100.lib.trajectory.path.spline.HolonomicSplineSE2;
+import org.team100.lib.trajectory.PathToVectorSeries;
+import org.team100.lib.trajectory.spline.SplineSE2Factory;
+import org.team100.lib.trajectory.spline.SplineSE2;
+import org.team100.lib.util.ChartUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,162 +31,123 @@ public class PathFactorySE2Test implements Timeless {
     /** Preserves the tangent at the corner and so makes a little "S" */
     @Test
     void testCorner() {
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 1),
-                                new Rotation2d()),
-                        new DirectionSE2(0, 1, 0), 1));
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
-        Path100 path = pathFactory.fromWaypoints(waypoints);
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(0, 0), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 0), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w2 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 1), new Rotation2d()),
+                new DirectionSE2(0, 1, 0), 1);
+        List<WaypointSE2> waypoints = List.of(w0, w1, w2);
+        List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.01, 0.1);
+        PathSE2 path = pathFactory.get(splines);
 
         assertEquals(54, path.length());
-        PathPointSE2 p = path.getPoint(0);
+        PathSE2Point p = path.getEntry(0).point();
         assertEquals(0, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
-        p = path.getPoint(8);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
+        p = path.getEntry(8).point();
         assertEquals(0.5, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
     @Test
     void testLinear() {
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1));
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
-        Path100 path = pathFactory.fromWaypoints(waypoints);
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 0), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        List<WaypointSE2> waypoints = List.of(w0, w1);
+        List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.01, 0.1);
+        PathSE2 path = pathFactory.get(splines);
         assertEquals(17, path.length());
-        PathPointSE2 p = path.getPoint(0);
+        PathSE2Point p = path.getEntry(0).point();
         assertEquals(0, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
-        p = path.getPoint(8);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
+        p = path.getEntry(8).point();
         assertEquals(0.5, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
-    }
-
-    /** Turning in place once again does not work. */
-    @Test
-    void testSpin() {
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                Rotation2d.kZero),
-                        new DirectionSE2(0, 0, 1), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                Rotation2d.kCCW_90deg),
-                        new DirectionSE2(0, 0, 1), 1));
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
-        assertThrows(IllegalArgumentException.class,
-                () -> pathFactory.fromWaypoints(waypoints));
-    }
-
-    /** Hard corners once again do not work. */
-    @Test
-    void testActualCorner() {
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(0, 0, 1), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(1)),
-                        new DirectionSE2(0, 0, 1), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 1),
-                                new Rotation2d()),
-                        new DirectionSE2(0, 1, 0), 1));
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
-        assertThrows(IllegalArgumentException.class,
-                () -> pathFactory.fromWaypoints(waypoints));
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
     @Test
     void testComposite() {
-        // note none of these directions include rotation; it's all in between.
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(0, 0),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 0),
-                                new Rotation2d(1)),
-                        new DirectionSE2(1, 0, 0), 1),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(2, 0),
-                                new Rotation2d(1)),
-                        new DirectionSE2(1, 0, 0), 1));
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.01, 0.01, 0.1);
-        Path100 trajectory = pathFactory.fromWaypoints(waypoints);
-        TrajectoryPlotter.plot(trajectory, 0.1);
-        assertEquals(59, trajectory.length(), 0.001);
+        // note none of the directions include rotation, so dtheta is zero at the knots.
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(0, 0), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 0), new Rotation2d(1)),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w2 = new WaypointSE2(
+                new Pose2d(new Translation2d(2, 0), new Rotation2d(1)),
+                new DirectionSE2(1, 0, 0), 1);
+        List<WaypointSE2> waypoints = List.of(w0, w1, w2);
+        List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.01, 0.1);
+        PathSE2 path = pathFactory.get(splines);
+        List<VectorSeries> series = new PathToVectorSeries(0.1).convert(path);
+        ChartUtil.plotOverlay(series, 500);
+        assertEquals(59, path.length(), 0.001);
+    }
+
+        @Test
+    void testCurve() {
+        // note none of the directions include rotation, so dtheta is zero at the knots.
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(0, 0), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 1), new Rotation2d(2)),
+                new DirectionSE2(0, 1, 0), 1);
+        List<WaypointSE2> waypoints = List.of(w0, w1);
+        List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.01, 0.1);
+        PathSE2 path = pathFactory.get(splines);
+        List<VectorSeries> series = new PathToVectorSeries(0.1).convert(path);
+        ChartUtil.plotOverlay(series, 500);
+        assertEquals(57, path.length(), 0.001);
     }
 
     @Test
     void test() {
         WaypointSE2 p1 = new WaypointSE2(
-                new Pose2d(
-                        new Translation2d(0, 0),
-                        Rotation2d.kZero),
+                new Pose2d(new Translation2d(0, 0), Rotation2d.kZero),
                 new DirectionSE2(1, 0, 0), 1.2);
         WaypointSE2 p2 = new WaypointSE2(
-                new Pose2d(
-                        new Translation2d(15, 10),
-                        Rotation2d.kZero),
+                new Pose2d(new Translation2d(15, 10), Rotation2d.kZero),
                 new DirectionSE2(1, 5, 0), 1.2);
-        HolonomicSplineSE2 s = new HolonomicSplineSE2(p1, p2);
+        SplineSE2 s = new SplineSE2(p1, p2);
 
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.05, 0.05, 0.1);
-        List<PathPointSE2> samples = pathFactory.samplesFromSpline(s);
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.05, 0.1);
+
+        List<PathSE2Entry> samples = new ArrayList<>();
+        samples.add(s.entry(0.0));
+        pathFactory.addEndpointOrBisect(s, samples, 0, 1);
 
         double arclength = 0;
-        PathPointSE2 cur_pose = samples.get(0);
-        for (PathPointSE2 sample : samples) {
+        PathSE2Point cur_pose = samples.get(0).point();
+        for (PathSE2Entry sample : samples) {
             Twist2d twist = GeometryUtil.slog(
                     GeometryUtil.transformBy(
                             GeometryUtil.inverse(
                                     cur_pose.waypoint().pose()),
-                            sample.waypoint().pose()));
+                            sample.point().waypoint().pose()));
             arclength += Math.hypot(twist.dx, twist.dy);
-            cur_pose = sample;
+            cur_pose = sample.point();
         }
 
         WaypointSE2 pose = cur_pose.waypoint();
@@ -194,7 +159,7 @@ public class PathFactorySE2Test implements Timeless {
 
     @Test
     void testDx() {
-        HolonomicSplineSE2 s0 = new HolonomicSplineSE2(
+        SplineSE2 s0 = new SplineSE2(
                 new WaypointSE2(
                         new Pose2d(
                                 new Translation2d(0, -1),
@@ -205,14 +170,48 @@ public class PathFactorySE2Test implements Timeless {
                                 new Translation2d(1, 0),
                                 Rotation2d.kZero),
                         new DirectionSE2(0, 1, 0), 1));
-        List<HolonomicSplineSE2> splines = List.of(s0);
-        PathFactorySE2 pathFactory = new PathFactorySE2(0.1, 0.001, 0.001, 0.001);
-        List<PathPointSE2> motion = pathFactory.samplesFromSplines(splines);
-        for (PathPointSE2 p : motion) {
+        List<SplineSE2> splines = List.of(s0);
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.001, 0.001);
+        PathSE2 motion = pathFactory.get(splines);
+        for (int i = 0; i < motion.length(); ++i) {
+            PathSE2Point p = motion.getEntry(i).point();
             if (DEBUG)
                 System.out.printf("%5.3f %5.3f\n", p.waypoint().pose().getTranslation().getX(),
                         p.waypoint().pose().getTranslation().getY());
         }
+    }
+
+    /**
+     * Show x as a function of the pose list index.
+     * The pose list has no parameter, it's just a list
+     */
+    @Test
+    void testPoses() {
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(0, 0), new Rotation2d(0)),
+                new DirectionSE2(1, 0, 0), 1);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 0), new Rotation2d(0)),
+                new DirectionSE2(1, 0, 0), 1);
+        SplineSE2 spline = new SplineSE2(w0, w1);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.02, 0.1);
+
+        List<PathSE2Entry> poses = new ArrayList<>();
+        poses.add(spline.entry(0.0));
+        pathFactory.addEndpointOrBisect(spline, poses, 0, 1);
+
+        XYSeries sx = PathToVectorSeries.x("spline", poses.stream().map(x -> x.point()).toList());
+        XYDataset dataSet = new XYSeriesCollection(sx);
+        ChartUtil.plotStacked(dataSet);
+    }
+
+    @Test
+    void testEmpty() {
+        List<SplineSE2> splines = new ArrayList<>();
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.1, 0.1);
+        PathSE2 path = pathFactory.get(splines);
+        assertEquals(0, path.length(), 0.001);
     }
 
     /**
@@ -222,28 +221,22 @@ public class PathFactorySE2Test implements Timeless {
      */
     @Test
     void testPerformance() {
-        List<WaypointSE2> waypoints = List.of(
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(),
-                                new Rotation2d()),
-                        new DirectionSE2(1, 0, 0), 1.2),
-                new WaypointSE2(
-                        new Pose2d(
-                                new Translation2d(1, 1),
-                                new Rotation2d()),
-                        new DirectionSE2(0, 1, 0), 1.2));
-        long startTimeNs = System.nanoTime();
-        Path100 t = new Path100(new ArrayList<>());
+        // quarter-circle.
+        WaypointSE2 w0 = new WaypointSE2(
+                new Pose2d(new Translation2d(), new Rotation2d()),
+                new DirectionSE2(1, 0, 0), 1.2);
+        WaypointSE2 w1 = new WaypointSE2(
+                new Pose2d(new Translation2d(1, 1), new Rotation2d()),
+                new DirectionSE2(0, 1, 0), 1.2);
+        List<WaypointSE2> waypoints = List.of(w0, w1);
+        List<SplineSE2> splines = SplineSE2Factory.splinesFromWaypoints(waypoints);
+
+        PathSE2Factory pathFactory = new PathSE2Factory(0.1, 0.05, 0.2);
+        PathSE2 path = new PathSE2(new ArrayList<>());
         final int iterations = 100;
-        final double SPLINE_SAMPLE_TOLERANCE_M = 0.05;
-        final double SPLINE_SAMPLE_TOLERANCE_RAD = 0.2;
+        long startTimeNs = System.nanoTime();
         for (int i = 0; i < iterations; ++i) {
-            t = new PathFactorySE2(
-                    0.1,
-                    SPLINE_SAMPLE_TOLERANCE_M,
-                    SPLINE_SAMPLE_TOLERANCE_M,
-                    SPLINE_SAMPLE_TOLERANCE_RAD).fromWaypoints(waypoints);
+            path = pathFactory.get(splines);
         }
         long endTimeNs = System.nanoTime();
         double totalDurationMs = (endTimeNs - startTimeNs) / 1000000.0;
@@ -251,10 +244,10 @@ public class PathFactorySE2Test implements Timeless {
             System.out.printf("total duration ms: %5.3f\n", totalDurationMs);
             System.out.printf("duration per iteration ms: %5.3f\n", totalDurationMs / iterations);
         }
-        assertEquals(33, t.length());
-        PathPointSE2 p = t.getPoint(4);
+        assertEquals(33, path.length());
+        PathSE2Point p = path.getEntry(4).point();
         assertEquals(0.211, p.waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
 }

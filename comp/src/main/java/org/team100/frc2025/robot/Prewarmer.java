@@ -5,15 +5,15 @@ import java.util.List;
 
 import org.team100.lib.coherence.Takt;
 import org.team100.lib.geometry.DirectionSE2;
-import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.geometry.VelocitySE2;
+import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.logging.LoggerFactory;
 import org.team100.lib.logging.Logging;
-import org.team100.lib.trajectory.TrajectoryPlanner;
-import org.team100.lib.trajectory.path.PathFactorySE2;
-import org.team100.lib.trajectory.timing.TrajectoryFactory;
-import org.team100.lib.trajectory.timing.TimingConstraint;
-import org.team100.lib.trajectory.timing.TimingConstraintFactory;
+import org.team100.lib.trajectory.TrajectorySE2Factory;
+import org.team100.lib.trajectory.TrajectorySE2Planner;
+import org.team100.lib.trajectory.constraint.TimingConstraint;
+import org.team100.lib.trajectory.constraint.TimingConstraintFactory;
+import org.team100.lib.trajectory.path.PathSE2Factory;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -42,9 +42,9 @@ public class Prewarmer {
                 new DirectionSE2(1, 0, 0),
                 1));
         List<TimingConstraint> constraints = new TimingConstraintFactory(machinery.m_swerveKinodynamics).medium(logger);
-        TrajectoryFactory trajectoryFactory = new TrajectoryFactory(constraints);
-        PathFactorySE2 pathFactory = new PathFactorySE2();
-        TrajectoryPlanner planner = new TrajectoryPlanner(pathFactory, trajectoryFactory);
+        TrajectorySE2Factory trajectoryFactory = new TrajectorySE2Factory(constraints);
+        PathSE2Factory pathFactory = new PathSE2Factory();
+        TrajectorySE2Planner planner = new TrajectorySE2Planner(pathFactory, trajectoryFactory);
         planner.restToRest(waypoints);
 
         // Exercise the drive motors.

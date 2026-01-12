@@ -3,7 +3,8 @@ package org.team100.lib.state;
 import org.team100.lib.geometry.AccelerationSE2;
 import org.team100.lib.geometry.VelocitySE2;
 import org.team100.lib.subsystems.swerve.kinodynamics.SwerveKinodynamics;
-import org.team100.lib.trajectory.timing.TimedState;
+import org.team100.lib.trajectory.TrajectorySE2Point;
+import org.team100.lib.trajectory.path.PathSE2Point;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,11 +28,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
  * and rotation dimensions independently.
  */
 public class ControlSE2 {
-    private final Control100 m_x;
-    private final Control100 m_y;
-    private final Control100 m_theta;
+    private final ControlR1 m_x;
+    private final ControlR1 m_y;
+    private final ControlR1 m_theta;
 
-    public ControlSE2(Control100 x, Control100 y, Control100 theta) {
+    public ControlSE2(ControlR1 x, ControlR1 y, ControlR1 theta) {
         m_x = x;
         m_y = y;
         m_theta = theta;
@@ -39,16 +40,16 @@ public class ControlSE2 {
 
     public ControlSE2(Pose2d x, VelocitySE2 v) {
         this(
-                new Control100(x.getX(), v.x(), 0),
-                new Control100(x.getY(), v.y(), 0),
-                new Control100(x.getRotation().getRadians(), v.theta(), 0));
+                new ControlR1(x.getX(), v.x(), 0),
+                new ControlR1(x.getY(), v.y(), 0),
+                new ControlR1(x.getRotation().getRadians(), v.theta(), 0));
     }
 
     public ControlSE2(Pose2d x, VelocitySE2 v, AccelerationSE2 a) {
         this(
-                new Control100(x.getX(), v.x(), a.x()),
-                new Control100(x.getY(), v.y(), a.y()),
-                new Control100(x.getRotation().getRadians(), v.theta(), a.theta()));
+                new ControlR1(x.getX(), v.x(), a.x()),
+                new ControlR1(x.getY(), v.y(), a.y()),
+                new ControlR1(x.getRotation().getRadians(), v.theta(), a.theta()));
     }
 
     public ControlSE2(Pose2d x) {
@@ -60,7 +61,7 @@ public class ControlSE2 {
     }
 
     public static ControlSE2 zero() {
-        return new ControlSE2(new Control100(), new Control100(), new Control100());
+        return new ControlSE2(new ControlR1(), new ControlR1(), new ControlR1());
     }
 
     public ModelSE2 model() {
@@ -109,52 +110,59 @@ public class ControlSE2 {
         return new AccelerationSE2(m_x.a(), m_y.a(), m_theta.a());
     }
 
-    public Control100 x() {
+    public ControlR1 x() {
         return m_x;
     }
 
-    public Control100 y() {
+    public ControlR1 y() {
         return m_y;
     }
 
-    public Control100 theta() {
+    public ControlR1 theta() {
         return m_theta;
     }
 
     /**
-     * Transform timed pose into swerve state.
-     * 
-     * Correctly accounts for centripetal acceleration.
+     * Trajectory point => ControlSE2.
+     * Correctly computes centripetal acceleration.
      */
-    public static ControlSE2 fromTimedState(TimedState timedPose) {
-        double xx = timedPose.point().waypoint().pose().getTranslation().getX();
-        double yx = timedPose.point().waypoint().pose().getTranslation().getY();
-        double thetax = timedPose.point().waypoint().pose().getRotation().getRadians();
+    public static ControlSE2 fromTrajectorySE2Point(TrajectorySE2Point p) {
+        return ControlSE2.fromMovingPathSE2Point(p.point(), p.velocity(), p.accel());
+    }
 
-        double velocityM_s = timedPose.velocityM_S();
-        Rotation2d course = timedPose.point().waypoint().course().toRotation();
+    /**
+     * Point and pathwise velocity and accel => ControlSE2.
+     * Correctly computes centripetal acceleration.
+     */
+    public static ControlSE2 fromMovingPathSE2Point(
+            PathSE2Point point, double velocityM_s, double accelM_s_s) {
+
+        double xx = point.waypoint().pose().getTranslation().getX();
+        double yx = point.waypoint().pose().getTranslation().getY();
+        double thetax = point.waypoint().pose().getRotation().getRadians();
+
+        Rotation2d course = point.waypoint().course().toRotation();
         double xv = course.getCos() * velocityM_s;
         double yv = course.getSin() * velocityM_s;
-        double thetav = timedPose.point().getHeadingRateRad_M() * velocityM_s;
+        double thetav = point.waypoint().course().headingRate() * velocityM_s;
 
-        double accelM_s_s = timedPose.acceleration();
         double xa = course.getCos() * accelM_s_s;
         double ya = course.getSin() * accelM_s_s;
-        double thetaa = timedPose.point().getHeadingRateRad_M() * accelM_s_s;
+        double thetaa = point.waypoint().course().headingRate() * accelM_s_s;
 
         // centripetal accel = v^2/r = v^2 * curvature
         // this works because the acceleration vector is always normal
         // to the course vector, and in 2d, with signed curvature, that
         // determines the vector.
-        double curvRad_M = timedPose.point().getCurvatureRad_M();
+        double curvRad_M = point.getCurvatureRad_M();
         double centripetalAccelM_s_s = velocityM_s * velocityM_s * curvRad_M;
         double xCa = -1.0 * course.getSin() * centripetalAccelM_s_s;
         double yCa = course.getCos() * centripetalAccelM_s_s;
 
         return new ControlSE2(
-                new Control100(xx, xv, xa + xCa),
-                new Control100(yx, yv, ya + yCa),
-                new Control100(thetax, thetav, thetaa));
+                new ControlR1(xx, xv, xa + xCa),
+                new ControlR1(yx, yv, ya + yCa),
+                new ControlR1(thetax, thetav, thetaa));
     }
 
     public String toString() {

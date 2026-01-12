@@ -10,12 +10,13 @@ import org.team100.lib.logging.LoggerFactory.DoubleLogger;
 import org.team100.lib.logging.LoggerFactory.ModelSE2Logger;
 import org.team100.lib.state.ControlSE2;
 import org.team100.lib.state.ModelSE2;
-import org.team100.lib.trajectory.Trajectory100;
+import org.team100.lib.trajectory.TrajectorySE2Entry;
+import org.team100.lib.trajectory.TrajectorySE2;
 
 /** Produces references based on a trajectory. */
 public class TrajectoryReferenceSE2 implements ReferenceSE2 {
     private final LoggerFactory m_log;
-    private final Trajectory100 m_trajectory;
+    private final TrajectorySE2 m_trajectory;
     private final ModelSE2Logger m_log_current;
     private final ControlSE2Logger m_log_next;
     private final BooleanLogger m_log_done;
@@ -25,7 +26,7 @@ public class TrajectoryReferenceSE2 implements ReferenceSE2 {
 
     public TrajectoryReferenceSE2(
             LoggerFactory parent,
-            Trajectory100 trajectory) {
+            TrajectorySE2 trajectory) {
         m_log = parent.type(this);
         m_trajectory = trajectory;
         m_log_progress = m_log.doubleLogger(Level.TRACE, "progress");
@@ -64,7 +65,9 @@ public class TrajectoryReferenceSE2 implements ReferenceSE2 {
 
     @Override
     public ModelSE2 goal() {
-        ModelSE2 goal = ControlSE2.fromTimedState(m_trajectory.getLastPoint()).model();
+        TrajectorySE2Entry lastPoint = m_trajectory.getLastPoint();
+        ModelSE2 goal = ControlSE2.fromMovingPathSE2Point(
+                lastPoint.point().point(), lastPoint.point().velocity(), lastPoint.point().accel()).model();
         m_log_goal.log(() -> goal);
         return goal;
     }
@@ -78,6 +81,8 @@ public class TrajectoryReferenceSE2 implements ReferenceSE2 {
     }
 
     private ControlSE2 sample(double t) {
-        return ControlSE2.fromTimedState(m_trajectory.sample(t));
+        TrajectorySE2Entry sample = m_trajectory.sample(t);
+        return ControlSE2.fromMovingPathSE2Point(
+                sample.point().point(), sample.point().velocity(), sample.point().accel());
     }
 }
