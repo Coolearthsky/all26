@@ -3,6 +3,7 @@ package org.team100.lib.trajectory.constraint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.logging.LoggerFactory;
 import org.team100.lib.logging.TestLoggerFactory;
@@ -28,22 +29,22 @@ class SwerveDriveDynamicsConstraintTest {
         double m = c.maxV(new PathSE2Point(
                 WaypointSE2.irrotational(
                         new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                0, VecBuilder.fill(0, 0)));
+                VecBuilder.fill(0, 0)));
         assertEquals(5, m, DELTA);
 
         // moving in +x, no curvature, no rotation
         m = c.maxV(new PathSE2Point(
                 WaypointSE2.irrotational(
                         new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                0, VecBuilder.fill(0, 0)));
+                VecBuilder.fill(0, 0)));
         // max allowed velocity is full speed
         assertEquals(5, m, DELTA);
 
         // moving in +x, 5 rad/meter
         m = c.maxV(new PathSE2Point(
-                WaypointSE2.irrotational(
-                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                5, VecBuilder.fill(0, 0)));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 5), 1.2),
+                VecBuilder.fill(0, 0)));
         // at 5 rad/m with 0.5m sides the fastest you can go is 1.55 m/s.
         assertEquals(1.925, m, DELTA);
 
@@ -53,9 +54,9 @@ class SwerveDriveDynamicsConstraintTest {
         // traveling 1 m/s, there are 4 m/s available for the fastest wheel
         // which means 11.314 rad/s, and also 11.314 rad/m since we're going 1 m/s.
         PathSE2Point state = new PathSE2Point(
-                WaypointSE2.irrotational(
-                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                11.313708, VecBuilder.fill(0, 0));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 11.31708), 1.2),
+                VecBuilder.fill(0, 0));
         m = c.maxV(state);
         // verify corner velocity is full scale
         assertEquals(5, c.maxV());
@@ -71,7 +72,7 @@ class SwerveDriveDynamicsConstraintTest {
         // this is constant
         Pose2d p = new Pose2d(0, 0, new Rotation2d(0));
         PathSE2Point p2 = new PathSE2Point(
-                WaypointSE2.irrotational(p, 0, 1.2), 0, VecBuilder.fill(0, 0));
+                WaypointSE2.irrotational(p, 0, 1.2), VecBuilder.fill(0, 0));
         assertEquals(-20, c.maxDecel(p2, 0), DELTA);
         assertEquals(10, c.maxAccel(p2, 0), DELTA);
     }

@@ -21,40 +21,22 @@ public class PathSE2Point {
      */
     private final WaypointSE2 m_waypoint;
     /**
-     * Change in heading per meter of motion, rad/m.
-     */
-    private final double m_headingRateRad_M;
-    /**
      * Curvature vector. Norm is \kappa, curvature in radians per meter, which is
      * the reciprocal of the radius.
      */
     private final Vector<N2> m_K;
 
     /**
-     * @param waypoint         location and heading and direction of travel
-     * @param headingRateRad_M change in heading, per meter traveled
-     * @param curvatureRad_M   change in course per meter traveled.
+     * @param waypoint Pose and course in SE(2)
+     * @param K        Curvature vector
      */
-    public PathSE2Point(
-            WaypointSE2 waypoint,
-            double headingRateRad_M,
-            Vector<N2> K) {
+    public PathSE2Point(WaypointSE2 waypoint, Vector<N2> K) {
         m_waypoint = waypoint;
-        m_headingRateRad_M = headingRateRad_M;
         m_K = K;
     }
 
     public WaypointSE2 waypoint() {
         return m_waypoint;
-    }
-
-    /**
-     * Heading rate is radians per meter.
-     * 
-     * If you want radians per second, multiply by velocity (meters per second).
-     */
-    public double getHeadingRateRad_M() {
-        return m_headingRateRad_M;
     }
 
     /**
@@ -94,7 +76,8 @@ public class PathSE2Point {
                 System.out.println("wrong waypoint");
             return false;
         }
-        if (!Math100.epsilonEquals(m_headingRateRad_M, p2dwc.m_headingRateRad_M)) {
+        if (!Math100.epsilonEquals(waypoint().course().headingRate(),
+                p2dwc.waypoint().course().headingRate())) {
             if (DEBUG)
                 System.out.println("wrong heading rate");
             return false;
@@ -109,12 +92,9 @@ public class PathSE2Point {
 
     public String toString() {
         return String.format(
-                "x %5.3f, y %5.3f, theta %5.3f, course %s, dtheta %5.3f, K %s",
-                m_waypoint.pose().getTranslation().getX(),
-                m_waypoint.pose().getTranslation().getY(),
-                m_waypoint.pose().getRotation().getRadians(),
+                "pose %s course %s, K %s",
+                StrUtil.pose2Str(m_waypoint.pose()),
                 m_waypoint.course(),
-                m_headingRateRad_M,
                 StrUtil.vecStr(m_K));
     }
 

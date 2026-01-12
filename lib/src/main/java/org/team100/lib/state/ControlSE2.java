@@ -144,11 +144,11 @@ public class ControlSE2 {
         Rotation2d course = point.waypoint().course().toRotation();
         double xv = course.getCos() * velocityM_s;
         double yv = course.getSin() * velocityM_s;
-        double thetav = point.getHeadingRateRad_M() * velocityM_s;
+        double thetav = point.waypoint().course().headingRate() * velocityM_s;
 
         double xa = course.getCos() * accelM_s_s;
         double ya = course.getSin() * accelM_s_s;
-        double thetaa = point.getHeadingRateRad_M() * accelM_s_s;
+        double thetaa = point.waypoint().course().headingRate() * accelM_s_s;
 
         // centripetal accel = v^2/r = v^2 * curvature
         // this works because the acceleration vector is always normal

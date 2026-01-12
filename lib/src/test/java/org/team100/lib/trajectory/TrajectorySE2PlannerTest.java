@@ -63,7 +63,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         assertEquals(0, tp.point().velocity(), DELTA);
         TrajectorySE2Entry p = t.getPoint(8);
         assertEquals(0.5, p.point().point().waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.point().point().getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.point().point().waypoint().course().headingRate(), DELTA);
     }
 
     @Test
@@ -95,7 +95,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         assertEquals(0, tp.point().velocity(), DELTA);
         TrajectorySE2Entry p = t.getPoint(8);
         assertEquals(0.5, p.point().point().waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.point().point().getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.point().point().waypoint().course().headingRate(), DELTA);
     }
 
     /**
@@ -137,7 +137,7 @@ class TrajectorySE2PlannerTest implements Timeless {
         assertEquals(33, t.length());
         TrajectorySE2Entry p = t.getPoint(12);
         assertEquals(0.605, p.point().point().waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.point().point().getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.point().point().waypoint().course().headingRate(), DELTA);
     }
 
     @Test
@@ -429,7 +429,7 @@ class TrajectorySE2PlannerTest implements Timeless {
             double dheadingDt = dheading / 0.04;
             // this uses the intrinsic heading rate and the velocity
             // rad/m * m/s = rad/s
-            double intrinsicDheadingDt = p0.point().point().getHeadingRateRad_M() * p0.point().velocity();
+            double intrinsicDheadingDt = p0.point().point().waypoint().course().headingRate() * p0.point().velocity();
             // curvature is used to compute centripetal acceleration
             // ca = v^2*curvature
             DirectionSE2 course0 = p0.point().point().waypoint().course();

@@ -65,7 +65,7 @@ public class FixedTrajectory extends Command {
         Pose2d currentPose = m_drive.getPose();
         Pose2d poseReference = current.point().point().waypoint().pose();
         double velocityReference = next.point().velocity();
-        double omegaReference = next.point().velocity() * next.point().point().getHeadingRateRad_M();
+        double omegaReference = next.point().velocity() * next.point().point().waypoint().course().headingRate();
         ChassisSpeeds speeds = m_controller.calculate(
                 currentPose, poseReference, velocityReference, omegaReference);
         m_drive.setVelocity(speeds.vxMetersPerSecond, speeds.omegaRadiansPerSecond);

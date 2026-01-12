@@ -119,7 +119,7 @@ public class SplineSE2 implements ISplineSE2 {
     }
 
     public PathSE2Point point(double s) {
-        return new PathSE2Point(waypoint(s), headingRate(s), K(s));
+        return new PathSE2Point(waypoint(s), K(s));
     }
 
     ////////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ public class SplineSE2 implements ISplineSE2 {
         return Math.hypot(dx, dy);
     }
 
-    /** Heading angular velocity with respect to translatoin. */
+    /** Heading angular velocity with respect to translation. */
     double headingRate(double s) {
         double dheading = dheading(s);
         double v = pprimeTranslationNorm(s);

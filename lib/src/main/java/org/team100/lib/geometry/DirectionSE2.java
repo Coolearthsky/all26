@@ -55,6 +55,18 @@ public class DirectionSE2 {
         return VecBuilder.fill(rot.getCos(), rot.getSin());
     }
 
+    /**
+     * Rate of change of heading relative to translation, rad/m.
+     * 
+     * If you want radians per second, multiply by velocity (meters per second).
+     */
+    public double headingRate() {
+        double hypot = Math.hypot(x, y);
+        if (hypot < 1e-6)
+            return 0;
+        return theta / hypot;
+    }
+
     /** In the direction of the specified angle in radians, without rotation */
     public static DirectionSE2 irrotational(double rad) {
         return fromDirections(rad, 0);

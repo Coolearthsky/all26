@@ -14,9 +14,11 @@ public class ControlSE2Test {
     @Test
     void test0() {
         // moving +x
-        WaypointSE2 waypoint = new WaypointSE2(new Pose2d(), new DirectionSE2(1, 0, 0), 1);
         // positive curvature
-        PathSE2Point point = new PathSE2Point(waypoint, 0, VecBuilder.fill(0, 1));
+        PathSE2Point point = new PathSE2Point(
+                new WaypointSE2(new Pose2d(),
+                        new DirectionSE2(1, 0, 0), 1),
+                VecBuilder.fill(0, 1));
         // moving at 1 m/s
         ControlSE2 control = ControlSE2.fromMovingPathSE2Point(point, 1, 0);
         assertEquals(0, control.x().a(), 0.001);
@@ -27,9 +29,10 @@ public class ControlSE2Test {
     @Test
     void test1() {
         // moving +x
-        WaypointSE2 waypoint = new WaypointSE2(new Pose2d(), new DirectionSE2(1, 0, 0), 1);
         // negative curvature
-        PathSE2Point point = new PathSE2Point(waypoint, 0, VecBuilder.fill(0, -1));
+        PathSE2Point point = new PathSE2Point(
+                new WaypointSE2(new Pose2d(), new DirectionSE2(1, 0, 0), 1),
+                VecBuilder.fill(0, -1));
         // moving at 1 m/s
         ControlSE2 control = ControlSE2.fromMovingPathSE2Point(point, 1, 0);
         assertEquals(0, control.x().a(), 0.001);

@@ -50,11 +50,11 @@ public class PathFactorySE2Test implements Timeless {
         PathSE2Point p = path.getEntry(0).point();
         assertEquals(0, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
         p = path.getEntry(8).point();
         assertEquals(0.5, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
     @Test
@@ -74,11 +74,11 @@ public class PathFactorySE2Test implements Timeless {
         PathSE2Point p = path.getEntry(0).point();
         assertEquals(0, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
         p = path.getEntry(8).point();
         assertEquals(0.5, p.waypoint().pose().getTranslation().getX(), DELTA);
         assertEquals(0, p.waypoint().pose().getRotation().getRadians(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
     @Test
@@ -247,7 +247,7 @@ public class PathFactorySE2Test implements Timeless {
         assertEquals(33, path.length());
         PathSE2Point p = path.getEntry(4).point();
         assertEquals(0.211, p.waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.waypoint().course().headingRate(), DELTA);
     }
 
 }

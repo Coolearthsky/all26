@@ -141,7 +141,7 @@ public class ModelSE2 {
         Rotation2d course = point.waypoint().course().toRotation();
         double xv = course.getCos() * velocityM_s;
         double yv = course.getSin() * velocityM_s;
-        double thetav = point.getHeadingRateRad_M() * velocityM_s;
+        double thetav = point.waypoint().course().headingRate() * velocityM_s;
         return new ModelSE2(
                 new ModelR1(xx, xv),
                 new ModelR1(yx, yv),

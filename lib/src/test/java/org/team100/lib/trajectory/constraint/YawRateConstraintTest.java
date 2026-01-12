@@ -3,6 +3,7 @@ package org.team100.lib.trajectory.constraint;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+import org.team100.lib.geometry.DirectionSE2;
 import org.team100.lib.geometry.WaypointSE2;
 import org.team100.lib.logging.LoggerFactory;
 import org.team100.lib.logging.TestLoggerFactory;
@@ -29,8 +30,9 @@ class YawRateConstraintTest implements Timeless {
         YawRateConstraint c = new YawRateConstraint(logger, SwerveKinodynamicsFactory.forTest(logger),
                 YAW_RATE_SCALE);
         PathSE2Point p = new PathSE2Point(
-                WaypointSE2.irrotational(new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                1, VecBuilder.fill(0, 0));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 1), 1.2),
+                VecBuilder.fill(0, 0));
         assertEquals(-8.485, c.maxDecel(p, 0), DELTA);
         assertEquals(8.485, c.maxAccel(p, 0), DELTA);
         assertEquals(2.828, c.maxV(p), DELTA);
@@ -42,9 +44,9 @@ class YawRateConstraintTest implements Timeless {
         YawRateConstraint c = new YawRateConstraint(logger, SwerveKinodynamicsFactory.forTest2(logger),
                 YAW_RATE_SCALE);
         PathSE2Point p = new PathSE2Point(
-                WaypointSE2.irrotational(
-                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                1, VecBuilder.fill(0, 0));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 1), 1.2),
+                VecBuilder.fill(0, 0));
         assertEquals(5.656, c.maxV(p), DELTA);
     }
 
@@ -56,9 +58,9 @@ class YawRateConstraintTest implements Timeless {
                 YAW_RATE_SCALE);
         // driving and spinning
         PathSE2Point p = new PathSE2Point(
-                WaypointSE2.irrotational(
-                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                1, VecBuilder.fill(0, 0));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 1), 1.2),
+                VecBuilder.fill(0, 0));
         // there is an accel limit.
         assertEquals(-8.485, c.maxDecel(p, 0), DELTA);
         assertEquals(8.485,
@@ -72,9 +74,9 @@ class YawRateConstraintTest implements Timeless {
         YawRateConstraint c = new YawRateConstraint(logger, SwerveKinodynamicsFactory.forRealisticTest(logger),
                 scale);
         PathSE2Point p = new PathSE2Point(
-                WaypointSE2.irrotational(
-                        new Pose2d(0, 0, new Rotation2d(0)), 0, 1.2),
-                1, VecBuilder.fill(0, 0));
+                new WaypointSE2(new Pose2d(0, 0, new Rotation2d(0)),
+                        new DirectionSE2(1, 0, 1), 1.2),
+                VecBuilder.fill(0, 0));
         // this number is still quite high even with a low scale.
         assertEquals(-16.971, c.maxDecel(p, 0), DELTA);
         assertEquals(16.971,

@@ -227,7 +227,7 @@ public class TrajectorySE2FactoryTest {
         assertEquals(33, trajectory.length());
         TrajectorySE2Entry p = trajectory.getPoint(12);
         assertEquals(0.605, p.point().point().waypoint().pose().getTranslation().getX(), DELTA);
-        assertEquals(0, p.point().point().getHeadingRateRad_M(), DELTA);
+        assertEquals(0, p.point().point().waypoint().course().headingRate(), DELTA);
     }
 
     /**
