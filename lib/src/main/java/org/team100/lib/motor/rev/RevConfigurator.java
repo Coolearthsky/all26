@@ -104,14 +104,19 @@ public class RevConfigurator {
         crash(() -> m_motor.configure(conf, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters));
     }
 
-    /** TODO: don't allow a limit above the configuration */
+    /**
+     * Changes the stator limit. This is useful for "holding torque" which might be
+     * less than "grabbing torque".
+     */
     public void overrideStatorLimit(int limit) {
         SparkMaxConfig conf = new SparkMaxConfig();
         conf.smartCurrentLimit(limit);
         crash(() -> m_motor.configure(conf, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
     }
 
-    /** TODO: make sure clients call this when their need is done */
+    /**
+     * Returns the current limit to the initial setup.
+     */
     public void endCurrentLimitOverride() {
         currentConfig();
     }
