@@ -32,17 +32,17 @@ public class Sim {
             blueScore::auto,
             redScore::auto);
 
-    final Robot red1 = new Robot(
+    final Robot red1 = new Robot("r1",
             redZone, neutralZone, blueZone, redHub, 8, this::time);
-    final Robot red2 = new Robot(
+    final Robot red2 = new Robot("r2",
             redZone, neutralZone, blueZone, redHub, 8, this::time);
-    final Robot red3 = new Robot(
+    final Robot red3 = new Robot("r3",
             redZone, neutralZone, blueZone, redHub, 8, this::time);
-    final Robot blue1 = new Robot(
+    final Robot blue1 = new Robot("b1",
             blueZone, neutralZone, redZone, blueHub, 8, this::time);
-    final Robot blue2 = new Robot(
+    final Robot blue2 = new Robot("b2",
             blueZone, neutralZone, redZone, blueHub, 8, this::time);
-    final Robot blue3 = new Robot(
+    final Robot blue3 = new Robot("b3",
             blueZone, neutralZone, redZone, blueHub, 8, this::time);
 
     final List<BallContainer> containers;
@@ -161,8 +161,9 @@ public class Sim {
         System.out.print(
                 "matchTimer, total, redZone, neutralZone, blueZone, redHub, blueHub, redOutpost, blueOutpost, ");
         System.out.print(
-                " r1l, red1,  r2l, red2,  r3l, red3,  b1l, blue1,  b2l, blue2,  b3l, blue3, ");
-        System.out.print(" ract,  bact\n");
+                red1.header() + ", " + red2.header() + ", " + red3.header() + ", "
+                        + blue1.header() + ", " + blue1.header() + ", " + blue1.header());
+        System.out.print(",  ract,  bact\n");
     }
 
     /** print the ball locations */
@@ -173,10 +174,9 @@ public class Sim {
                 redHub.count(), blueHub.count(),
                 redOutpost.count(), blueOutpost.count());
 
-        System.out.printf("%4s, %4d, %4s, %4d, %4s, %4d, %4s, %5d, %4s, %5d, %4s, %5d, ",
-                red1.location.name, red1.count(), red2.location.name, red2.count(), red3.location.name, red3.count(),
-                blue1.location.name, blue1.count(), blue2.location.name, blue2.count(), blue3.location.name,
-                blue3.count());
+        System.out.printf("%s, %s, %s, %s, %s, %s, ",
+                red1, red2, red3, blue1, blue2, blue3);
+
         System.out.printf("%5b, %5b\n",
                 redHub.active, blueHub.active);
     }
